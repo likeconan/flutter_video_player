@@ -8,13 +8,14 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static VideoPlayerOneplusdreamPlatform _instance = MethodChannelVideoPlayerOneplusdream();
+  static VideoPlayerOneplusdreamPlatform _instance =
+      MethodChannelVideoPlayerOneplusdream();
 
   /// The default instance of [VideoPlayerOneplusdreamPlatform] to use.
   ///
   /// Defaults to [MethodChannelVideoPlayerOneplusdream].
   static VideoPlayerOneplusdreamPlatform get instance => _instance;
-  
+
   /// Platform-specific implementations should set this with their own
   /// platform-specific class that extends [VideoPlayerOneplusdreamPlatform] when
   /// they register themselves.
@@ -23,7 +24,7 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
+  Future toggleFullScreen() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

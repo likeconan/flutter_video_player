@@ -19,8 +19,7 @@ class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
 
   /// Returns a [String] containing the version of the platform.
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = html.window.navigator.userAgent;
-    return version;
+  Future toggleFullScreen() async {
+    // todo
   }
 }
