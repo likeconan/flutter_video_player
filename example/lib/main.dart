@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:video_player_oneplusdream/video_player.widget.dart';
+import 'package:video_player_oneplusdream/video_player_event.model.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
 
 void main() {
@@ -45,7 +46,8 @@ class _MyAppState extends State<MyApp> {
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      _videoPlayerOneplusdreamPlugin.toggleFullScreen();
+                      _videoPlayerOneplusdreamPlugin
+                          .toggleFullScreen(ToggleFullScreenParam());
                     },
                     child: Text("open full screen"))
               ],

@@ -7,17 +7,33 @@
 
 import Foundation
 import AVKit
+import MediaPlayer
 
-class PlayerView: UIView {
+class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     override class var layerClass: AnyClass {
         return AVPlayerLayer.self
     }
     
+    weak var delegate: PlayerViewDelegate?
+    
     required init(containerView: UIView) {
         self.containerView = containerView
         super.init(frame: .zero)
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            currentVolume = audioSession.outputVolume
+            try audioSession.setCategory(.playback)
+            try audioSession.setActive(true, options: [])
+            
+        } catch {
+            print("Setting category to AVAudioSessionCategoryPlayback failed.")
+        }
+        currentBrightness = UIScreen.main.brightness
         setupUI();
+        setupPictureInPicture();
         bindActions();
+        bindGestures();
+        
     }
     
     required init?(coder: NSCoder) {
@@ -28,6 +44,16 @@ class PlayerView: UIView {
     var isFullScreen = false;
     var playerItem: AVPlayerItem?
     var containerView:UIView;
+    var pipController: AVPictureInPictureController!
+    var pipPossibleObservation: NSKeyValueObservation?
+    
+    // gestures param
+    var startLocation = CGPoint()
+    var currentVolume = Float(0.0)
+    var currentBrightness = CGFloat(0)
+    var gestureSwipeEvent = GestureEvent.none
+    
+    
     lazy var viewController:UIViewController = {
         let _viewController = UIViewController();
         _viewController.modalPresentationStyle = .fullScreen
@@ -37,6 +63,13 @@ class PlayerView: UIView {
     lazy var backIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setTitle("Back", for: .normal)
+        button.sizeToFit()
+        return button
+    }()
+    
+    lazy var pipIcon:UIButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("Pip", for: .normal)
         button.sizeToFit()
         return button
     }()
@@ -56,11 +89,39 @@ class PlayerView: UIView {
     
     func setupUI() {
         self.addSubview(backIcon);
+        self.addSubview(pipIcon)
+        
+        backIcon.snp.makeConstraints { make in
+            make.top.equalTo(self).offset(12)
+            make.left.equalTo(self).offset(12)
+        }
+        pipIcon.snp.makeConstraints { make in
+            make.bottom.equalTo(self).offset(-12)
+            make.right.equalTo(self).offset(-12)
+        }
     }
     
     func bindActions() {
-        
         backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchUpInside)
+        pipIcon.addTarget(self, action: #selector(pipIconClicked), for: .touchUpInside)
+    }
+    
+    func setupPictureInPicture() {
+        // Ensure PiP is supported by current device.
+        if AVPictureInPictureController.isPictureInPictureSupported() {
+            // Create a new controller, passing the reference to the AVPlayerLayer.
+            pipController = AVPictureInPictureController(playerLayer: playerLayer)
+            pipController.delegate = self
+            pipPossibleObservation = pipController.observe(\AVPictureInPictureController.isPictureInPicturePossible,
+                                                            options: [.initial, .new]) { [weak self] _, change in
+                // Update the PiP button's enabled state.
+//                self?.pipButton.isEnabled = change.newValue ?? false
+                self?.pipIcon.isHidden = !(change.newValue ?? false)
+            }
+        } else {
+            // PiP isn't supported by the current device. Disable the PiP button.
+            self.pipIcon.isHidden = true
+        }
     }
     
     deinit {
@@ -68,4 +129,25 @@ class PlayerView: UIView {
         print("deinit of PlayerView")
     }
     
+}
+
+
+enum GestureEvent {
+    case volume
+    case brightness
+    case seek
+    case none
+    
+    func description () -> String {
+        switch self {
+        case .volume:
+            return "volume"
+        case .brightness:
+            return "brightness"
+        case .seek:
+            return "seek"
+        case .none:
+            return "none"
+        }
+    }
 }

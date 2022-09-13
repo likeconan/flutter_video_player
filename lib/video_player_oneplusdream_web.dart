@@ -6,6 +6,7 @@ import 'dart:html' as html show window;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
+import 'video_player_event.model.dart';
 import 'video_player_oneplusdream_platform_interface.dart';
 
 /// A web implementation of the VideoPlayerOneplusdreamPlatform of the VideoPlayerOneplusdream plugin.
@@ -19,7 +20,7 @@ class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
 
   /// Returns a [String] containing the version of the platform.
   @override
-  Future toggleFullScreen() async {
+  Future toggleFullScreen(ToggleFullScreenParam param) async {
     // todo
   }
 }

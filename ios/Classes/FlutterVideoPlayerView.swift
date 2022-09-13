@@ -32,10 +32,13 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 }
 
-class VideoPlayerView: NSObject, FlutterPlatformView {
+class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
+    
+    
     private var _view: UIView
     private var _playerContainer: UIView;
     private var playerView: PlayerView!
+    private var _channle:FlutterMethodChannel;
     
     init(
         frame: CGRect,
@@ -46,12 +49,25 @@ class VideoPlayerView: NSObject, FlutterPlatformView {
     ) {
         _view = UIView()
         _playerContainer = UIView();
+        _channle = channel;
         super.init()
         // iOS views can be created here
-        createNativeView(view: _view)
-        channel.setMethodCallHandler { call, result in
+        createNativeView(view: _view);
+        setEvents();
+    }
+    
+    func setEvents() {
+        self._channle.setMethodCallHandler { call, result in
             if(call.method == "toggleFullScreen") {
-                self.playerView.toggleFullscreen(isFullScreen:true)
+                if let args = call.arguments as? Dictionary<String, Any>,
+                   let isFullScreen = args["isFullScreen"] as? Bool,
+                   let shouldRotate = args["shouldRotate"] as? Bool{
+                    self.playerView.toggleFullscreen(isFullScreen:isFullScreen,shouldRotate:shouldRotate)
+                    result(nil)
+                } else {
+                    result(FlutterError.init(code: "errorSetParameter", message: "data or format error", details: nil))
+                }
+                
                 result(nil)
             }
         }
@@ -80,6 +96,10 @@ class VideoPlayerView: NSObject, FlutterPlatformView {
         } else {
             self.playerView.toggleFullscreen(isFullScreen:false, shouldRotate: false)
         }
+    }
+    
+    func onBack() {
+        self._channle.invokeMethod("onBack", arguments: nil)
     }
     
 }

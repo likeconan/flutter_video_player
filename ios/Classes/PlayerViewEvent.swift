@@ -8,7 +8,7 @@
 import Foundation
 
 
-extension PlayerView {
-    
+protocol PlayerViewDelegate: AnyObject {
+    func onBack()
 }
 

@@ -1,5 +1,6 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import 'video_player_event.model.dart';
 import 'video_player_oneplusdream_method_channel.dart';
 
 abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
@@ -24,7 +25,7 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future toggleFullScreen() {
+  Future toggleFullScreen(ToggleFullScreenParam param) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

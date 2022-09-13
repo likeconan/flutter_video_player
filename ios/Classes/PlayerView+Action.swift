@@ -75,6 +75,8 @@ extension PlayerView {
     @objc func backIconClicked() {
         if(self.isFullScreen) {
             toggleFullscreen(isFullScreen:false);
+        } else {
+            self.delegate?.onBack();
         }
     }
     
@@ -119,6 +121,33 @@ extension PlayerView {
             if(shouldRotate){
                 UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
             }
+        }
+    }
+    
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController,
+                                    restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        // Restore the user interface.
+        print("pip completed")
+        completionHandler(true)
+    }
+    
+    func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        // Hide the playback controls.
+        // Show the placeholder artwork.
+        print("start pip")
+    }
+
+    func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        // Hide the placeholder artwork.
+        // Show the playback controls.
+        print("stop pip")
+    }
+    
+    @objc func pipIconClicked() {
+        if self.pipController.isPictureInPictureActive {
+            self.pipController.stopPictureInPicture()
+        } else {
+            self.pipController.startPictureInPicture()
         }
     }
 }
