@@ -13,6 +13,7 @@ extension PlayerView {
     func bindGestures() {
         bindSpeed();
         bindSwipe();
+        bindDoubleTap();
     }
     
     func bindSpeed() {
@@ -26,7 +27,22 @@ extension PlayerView {
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(panedView(_:)))
         self.addGestureRecognizer(panGestureRecognizer)
     }
+
+    func bindDoubleTap() {
+        let tapGR = UITapGestureRecognizer(target:self,action:#selector(togglePlay))
+        tapGR.numberOfTapsRequired = 2
+        self.addGestureRecognizer(tapGR)
+    }
     
+    @objc func togglePlay() {
+        if(self.player?.timeControlStatus == .paused){
+            self.player?.play();
+            playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
+        } else if(self.player?.timeControlStatus == .playing) {
+            self.player?.pause();
+            playIcon.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
+        }
+    }
     
     @objc func speedUp(gestureRecognizer: UILongPressGestureRecognizer) {
         if(UIGestureRecognizer.State.began == gestureRecognizer.state) {
@@ -36,48 +52,11 @@ extension PlayerView {
         }
     }
     
-    @objc private func didSwipeDown(_ sender: UISwipeGestureRecognizer) {
-        let point = sender.location(in: sender.view)
-        let isLeft = point.x <= (sender.view?.frame.width ?? 0) / 2
-        if(isLeft) {
-            handleBrightness(isUp: false)
-        }else {
-            handleVolume(isUp: false)
-        }
-    }
-    
-    @objc private func didSwipeUp(_ sender: UISwipeGestureRecognizer) {
-        let point = sender.location(in: sender.view)
-        let isLeft = point.x <= (sender.view?.frame.width ?? 0) / 2
-        if(isLeft) {
-            handleBrightness(isUp: true)
-        }else {
-            handleVolume(isUp: true)
-        }
-    }
-    
-    @objc private func didSwipeLeft(_ sender: UISwipeGestureRecognizer) {
-        
-    }
-    
-    @objc private func didSwipeRight(_ sender: UISwipeGestureRecognizer) {
-        
-    }
-    
-    func handleVolume(isUp:Bool) {
-        print("volume" + String(isUp));
-    }
-    
-    func handleBrightness(isUp:Bool) {
-        print("brightness" + String(isUp));
-    }
-    
     @objc func panedView(_ sender:UIPanGestureRecognizer){
-        
         let distanceKey:CGFloat = 10;
-        //UIGestureRecognizerState has been renamed to UIGestureRecognizer.State in Swift 4
         if (sender.state == UIGestureRecognizer.State.began) {
             self.startLocation = sender.location(in: self)
+            self.currentSliderTime = CGFloat(self.videoSlider.value)
         } else if (sender.state == UIGestureRecognizer.State.changed || sender.state == UIGestureRecognizer.State.ended) {
             let stopLocation = sender.location(in: self)
             let dx = stopLocation.x - self.startLocation.x;
@@ -102,10 +81,19 @@ extension PlayerView {
             MPVolumeView.setVolume(CGFloat(currentVolume) - val / 100)
         } else if(type == GestureEvent.brightness) {
             UIScreen.main.brightness = currentBrightness - val / 100
+        } else if(type == GestureEvent.seek) {
+            let current = max(min(self.currentSliderTime + val, self.duration), 0)
+            timerDraggingView.isHidden = false
+            timerDraggingLabel.text = formatTime(seconds: current) + " / " + (durationTimeLabel.text ?? "00:00")
         }
         if(isEnded) {
             currentVolume = AVAudioSession.sharedInstance().outputVolume
             currentBrightness = UIScreen.main.brightness
+            if(type == GestureEvent.seek) {
+                let current = max(min(self.currentSliderTime + val, self.duration), 0)
+                self.videoSlider.value = Float(current)
+                seekTo()
+            }
             gestureSwipeEvent = GestureEvent.none
         }
     }

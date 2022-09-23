@@ -22,7 +22,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
-  video_player_oneplusdream: befd194e1467a9a75a52f006439dd9cfd54861c7
+  video_player_oneplusdream: bc67d6c2d5f3b5e46c09e2bf927a661acd492a99
 
 PODFILE CHECKSUM: 7368163408c647b7eb699d0d788ba6718e18fb8d
 

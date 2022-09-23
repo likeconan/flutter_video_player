@@ -40,6 +40,10 @@ extension PlayerView {
         
         DispatchQueue.main.async { [weak self] in
             self?.player = AVPlayer(playerItem: self?.playerItem!)
+            self?.duration = CMTimeGetSeconds(asset.duration)
+            self?.durationTimeLabel.text = formatTime(seconds: self?.duration ?? 0)
+            self?.videoSlider.maximumValue = Float(self?.duration ?? 0)
+            self?.onProgress()
         }
     }
     
@@ -62,6 +66,7 @@ extension PlayerView {
             case .readyToPlay:
                 print(".readyToPlay")
                 player?.play()
+                playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
             case .failed:
                 print(".failed")
             case .unknown:
@@ -77,6 +82,39 @@ extension PlayerView {
             toggleFullscreen(isFullScreen:false);
         } else {
             self.delegate?.onBack();
+        }
+    }
+    
+    @objc func fullscreenIconClicked() {
+        toggleFullscreen(isFullScreen: !self.isFullScreen);
+    }
+    
+    @objc func onVideoSliderValChanged(slider: UISlider, event: UIEvent) {
+        if let touchEvent = event.allTouches?.first {
+            switch touchEvent.phase {
+            case .began:
+                // handle drag began
+                timerDraggingView.isHidden = false
+            case .moved:
+                // handle drag moved
+                timerDraggingLabel.text = formatTime(seconds: Double(slider.value)) + " / " + (durationTimeLabel.text ?? "00:00")
+            case .ended:
+                // handle drag ended
+                seekTo()
+            default:
+                break
+            }
+        }
+    }
+    
+    func seekTo() {
+        if player == nil { return }
+        let selectedTime: CMTime = CMTimeMake(value: Int64(videoSlider.value * 1000), timescale: 1000)
+        player?.seek(to: selectedTime)
+        player?.pause()
+        player?.play()
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
+            self.timerDraggingView.isHidden = true
         }
     }
     
@@ -122,7 +160,42 @@ extension PlayerView {
                 UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
             }
         }
+        rateIcon.isHidden = isFullScreen ? false : true
+        durationTimeLabel.snp.remakeConstraints { make in
+            make.centerY.equalTo(playIcon)
+            make.right.equalTo(isFullScreen ? rateIcon.snp.left : (pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left) ).offset(baseOffset * -1)
+        }
+        fullscreenIcon.setImage(MediaResource.shared.getImage(name: isFullScreen ? "fullscreen_exit":"fullscreen"), for: .normal)
     }
+    
+    func onProgress() {
+        self.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main) { (CMTime) -> Void in
+            if self.player!.currentItem?.status == .readyToPlay {
+                let time : Float64 = CMTimeGetSeconds(self.player!.currentTime());
+                print(time)
+                if(self.timerDraggingView.isHidden) {
+                    self.videoSlider.value = Float(time);
+                }
+                let timer = formatTime(seconds: time)
+                self.currentTimeLabel.text = timer
+                self.currentTimeLabel.snp.updateConstraints { make in
+                    make.width.equalTo(timer.count > 5 ? 54 : 36)
+                }
+            }
+            let playbackLikelyToKeepUp = self.player?.currentItem?.isPlaybackLikelyToKeepUp
+            if playbackLikelyToKeepUp == false{
+                print("IsBuffering")
+                //                self.ButtonPlay.isHidden = true
+                //                self.loadingView.isHidden = false
+            } else {
+                //                //stop the activity indicator
+                print("Buffering completed")
+                //                self.ButtonPlay.isHidden = false
+                //                self.loadingView.isHidden = true
+            }
+        }
+    }
+    
     
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController,
                                     restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
@@ -136,7 +209,7 @@ extension PlayerView {
         // Show the placeholder artwork.
         print("start pip")
     }
-
+    
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         // Hide the placeholder artwork.
         // Show the playback controls.
