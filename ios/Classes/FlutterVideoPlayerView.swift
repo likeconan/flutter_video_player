@@ -18,6 +18,10 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
         super.init()
     }
     
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+          return FlutterStandardMessageCodec.sharedInstance()
+    }
+    
     func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
@@ -52,7 +56,7 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         _channle = channel;
         super.init()
         // iOS views can be created here
-        createNativeView(view: _view);
+        createNativeView(view: _view, arguments: args);
         setEvents();
     }
     
@@ -79,15 +83,28 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         return _view
     }
     
-    func createNativeView(view _view: UIView){
-        _view.backgroundColor = .red
-        guard let url = URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8") else { return }
-        playerView = PlayerView(containerView: _view)
+    func createNativeView(view _view: UIView, arguments args: Any?){
+        guard let args = args as? Dictionary<String, Any>,
+              let autoPlay = args["autoPlay"] as? Bool,
+              let enablePreventScreenCapture = args["enablePreventScreenCapture"] as? Bool,
+              let enableMarquee = args["enableMarquee"] as? Bool,
+              let defaultFullScreen = args["defaultFullScreen"] as? Bool,
+              let items = args["playingItems"] as? [Dictionary<String, Any>]
+        else {return}
+        let protectionText = args["protectionText"] as? String
+        let marqueeText = args["marqueeText"] as? String
+        let position = args["position"] as? Double
+        var playingItems = [PlayingItem]()
+        for item in items {
+            playingItems.append(PlayingItem(url: item["url"] as! String, title: item["title"] as? String))
+        }
+        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, defaultFullScreen: defaultFullScreen, poisition: position, playingItems: playingItems)
+        playerView = PlayerView(containerView: _view,setting: param)
         _view.addSubview(playerView)
         playerView.snp.makeConstraints { (make) -> Void in
             make.edges.equalTo(_view)
         }
-        playerView.play(with: url)
+        //        playerView.play(with: url)
     }
     
     @objc func rotated() {

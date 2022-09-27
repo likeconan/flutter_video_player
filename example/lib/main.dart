@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player_oneplusdream/video_player.widget.dart';
 import 'package:video_player_oneplusdream/video_player_event.model.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
+import 'package:video_player_oneplusdream/video_player_setting.model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,7 +43,11 @@ class _MyAppState extends State<MyApp> {
                 Text("hello world"),
                 SizedBox(
                   height: 200,
-                  child: VideoPlayer(),
+                  child: VideoPlayer([
+                    PlayingItem(
+                        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                        title: "Rabbit")
+                  ]),
                 ),
                 ElevatedButton(
                     onPressed: () {

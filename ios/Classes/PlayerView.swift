@@ -16,7 +16,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     weak var delegate: PlayerViewDelegate?
     
-    required init(containerView: UIView) {
+    required init(containerView: UIView, setting:PlayerSetting) {
         self.containerView = containerView
         super.init(frame: .zero)
         let audioSession = AVAudioSession.sharedInstance()
@@ -31,9 +31,9 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         currentBrightness = UIScreen.main.brightness
         setupPictureInPicture();
         setupUI();
+        toggleNetwork();
         bindActions();
         bindGestures();
-        
     }
     
     required init?(coder: NSCoder) {
@@ -54,7 +54,8 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     var currentSliderTime = CGFloat(0)
     var gestureSwipeEvent = GestureEvent.none
     var baseOffset = CGFloat(12)
-    
+
+    var hideControlWork:DispatchWorkItem?
     
     lazy var viewController:UIViewController = {
         let _viewController = UIViewController();
@@ -67,6 +68,38 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         button.setImage(MediaResource.shared.getImage(name: "arrow_back"), for: .normal)
         button.sizeToFit()
         return button
+    }()
+    
+    lazy var title:UILabel = {
+        let label = UILabel();
+        label.text = "This is a custom label,This is a custom label,This is a custom label,This is a custom label"
+        label.textColor = .white
+        label.layer.masksToBounds = false
+        label.layer.shadowRadius = 2.0
+        label.layer.shadowOpacity = 0.5
+        label.layer.shadowOffset = CGSize(width: 1, height: 2)
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.numberOfLines = 2
+        return label
+    }()
+    
+    lazy var timeLabel:UILabel = {
+        let l = UILabel()
+        l.font = UIFont.systemFont(ofSize: 10)
+        l.textColor = .white
+        l.layer.masksToBounds = false
+        l.layer.shadowRadius = 2.0
+        l.layer.shadowOpacity = 0.5
+        l.layer.shadowOffset = CGSize(width: 1, height: 2)
+        l.isHidden = true
+        return l;
+    }()
+    
+    lazy var networkView:UIImageView = {
+        let i = UIImageView()
+        i.image = MediaResource.shared.getImage(name: "cellular")
+        i.isHidden = true
+        return i
     }()
     
     lazy var rateIcon:UIButton = {
@@ -100,7 +133,6 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     lazy var videoSlider: VideoSlider = {
         let slider = VideoSlider()
-        //        slider.backgroundColor = .red
         slider.maximumTrackTintColor = .lightGray
         slider.minimumTrackTintColor = .white
         slider.thumbTintColor = .white
@@ -149,15 +181,12 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     lazy var videoControllContainer:UIView = {
         let view = UIView()
-        let colorTop =  UIColor(red: 255.0/255.0, green: 149.0/255.0, blue: 0.0/255.0, alpha: 0.4).cgColor
-        let colorBottom = UIColor(red: 255.0/255.0, green: 94.0/255.0, blue: 58.0/255.0, alpha: 0.4).cgColor
-        
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [colorTop, colorBottom]
-        gradientLayer.locations = [0.0, 1.0]
-        gradientLayer.frame = view.bounds
-        view.layer.insertSublayer(gradientLayer, at:0)
-        //        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        return view
+    }()
+    
+    lazy var gradientBottomView:UIView = {
+        let view = UIView()
+        view.backgroundColor = .black.withAlphaComponent(0.2)
         return view
     }()
     
@@ -177,7 +206,11 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     func setupUI() {
         self.addSubview(timerDraggingView)
         self.addSubview(videoControllContainer)
+        videoControllContainer.addSubview(gradientBottomView)
         videoControllContainer.addSubview(backIcon)
+        videoControllContainer.addSubview(title)
+        videoControllContainer.addSubview(timeLabel)
+        videoControllContainer.addSubview(networkView)
         videoControllContainer.addSubview(playIcon)
         videoControllContainer.addSubview(pipIcon)
         videoControllContainer.addSubview(fullscreenIcon)
@@ -191,9 +224,31 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             make.edges.equalTo(self)
         }
         
+        gradientBottomView.snp.makeConstraints { make in
+            make.bottom.equalTo(videoControllContainer)
+            make.height.equalTo(36)
+            make.width.equalToSuperview()
+        }
+        
         backIcon.snp.makeConstraints { make in
             make.top.equalTo(self).offset(baseOffset)
             make.left.equalTo(self).offset(baseOffset)
+        }
+        
+        title.snp.makeConstraints { make in
+            make.centerY.equalTo(backIcon)
+            make.left.equalTo(backIcon).offset(backIcon.frame.width + baseOffset)
+            make.width.equalTo(250)
+        }
+        
+        timeLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(2)
+            make.centerX.equalToSuperview()
+        }
+        
+        networkView.snp.makeConstraints { make in
+            make.centerY.equalTo(backIcon)
+            make.right.equalToSuperview().offset(baseOffset * -1)
         }
         
         playIcon.snp.makeConstraints { make in
@@ -270,5 +325,4 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         playerItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
         print("deinit of PlayerView")
     }
-    
 }

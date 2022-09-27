@@ -66,6 +66,7 @@ extension PlayerView {
             case .readyToPlay:
                 print(".readyToPlay")
                 player?.play()
+                toggleControl();
                 playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
             case .failed:
                 print(".failed")
@@ -165,6 +166,8 @@ extension PlayerView {
             make.centerY.equalTo(playIcon)
             make.right.equalTo(isFullScreen ? rateIcon.snp.left : (pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left) ).offset(baseOffset * -1)
         }
+        toggleTimeLabel()
+        toggleNetwork()
         fullscreenIcon.setImage(MediaResource.shared.getImage(name: isFullScreen ? "fullscreen_exit":"fullscreen"), for: .normal)
     }
     

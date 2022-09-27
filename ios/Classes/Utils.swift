@@ -17,6 +17,22 @@ class VideoSlider: UISlider {
     }
 }
 
+struct PlayerSetting {
+    let autoPlay: Bool
+    let protectionText: String?
+    let enablePreventScreenCapture: Bool
+    let marqueeText: String?
+    let enableMarquee: Bool
+    let defaultFullScreen: Bool
+    let poisition: Double?
+    let playingItems: [PlayingItem]
+}
+
+struct PlayingItem {
+    let url: String
+    let title: String?
+}
+
 enum GestureEvent {
     case volume
     case brightness

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 import MediaPlayer
 
 extension PlayerView {
@@ -14,6 +15,7 @@ extension PlayerView {
         bindSpeed();
         bindSwipe();
         bindDoubleTap();
+        bindTap();
     }
     
     func bindSpeed() {
@@ -34,6 +36,12 @@ extension PlayerView {
         self.addGestureRecognizer(tapGR)
     }
     
+    func bindTap() {
+        let tapGR = UITapGestureRecognizer(target:self,action:#selector(toggleControl))
+        tapGR.numberOfTapsRequired = 1
+        self.addGestureRecognizer(tapGR)
+    }
+    
     @objc func togglePlay() {
         if(self.player?.timeControlStatus == .paused){
             self.player?.play();
@@ -41,7 +49,19 @@ extension PlayerView {
         } else if(self.player?.timeControlStatus == .playing) {
             self.player?.pause();
             playIcon.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
+            self.hideControlWork?.cancel()
         }
+    }
+    
+    @objc func toggleControl() {
+        self.videoControllContainer.isHidden = false
+        toggleTimeLabel()
+        toggleNetwork()
+        self.hideControlWork?.cancel()
+        self.hideControlWork = DispatchWorkItem(block: {
+            self.videoControllContainer.isHidden = true;
+        })
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: self.hideControlWork!)
     }
     
     @objc func speedUp(gestureRecognizer: UILongPressGestureRecognizer) {
@@ -96,6 +116,36 @@ extension PlayerView {
             }
             gestureSwipeEvent = GestureEvent.none
         }
+    }
+    
+    func toggleTimeLabel() {
+        self.timeLabel.isHidden = !self.isFullScreen
+        if(self.isFullScreen) {
+            let currentDateTime = Date()
+            let dateFormatter = DateFormatter()
+            dateFormatter.timeStyle = .short
+            self.timeLabel.text = "\(dateFormatter.string(from: currentDateTime))"
+        }
+    }
+    
+    func toggleNetwork() {
+        self.networkView.isHidden = !self.isFullScreen
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { path in
+            if path.status == .satisfied {
+                if path.usesInterfaceType(.wifi) {
+                    self.networkView.image = MediaResource.shared.getImage(name: "wifi")
+                } else if path.usesInterfaceType(.cellular) {
+                    self.networkView.image = MediaResource.shared.getImage(name: "cellular")
+                }
+            } else if path.status == .unsatisfied {
+                
+            }
+            monitor.cancel()
+        }
+        let queue = DispatchQueue.global(qos: .background)
+        monitor.start(queue: queue)
+        
     }
 }
 
