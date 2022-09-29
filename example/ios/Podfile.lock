@@ -1,9 +1,11 @@
 PODS:
   - Flutter (1.0.0)
   - SnapKit (5.6.0)
+  - ToastViewSwift (1.1.0)
   - video_player_oneplusdream (0.0.1):
     - Flutter
     - SnapKit
+    - ToastViewSwift
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -12,6 +14,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - SnapKit
+    - ToastViewSwift
 
 EXTERNAL SOURCES:
   Flutter:
@@ -22,7 +25,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
-  video_player_oneplusdream: b6a887fd15bb6af3c2bf539bf11da7be6109a164
+  ToastViewSwift: 8fc7b518fdd834daf4b8009d09435a3fb1d8df46
+  video_player_oneplusdream: 079bc5701cae9ab23449c7f3d616383e3349dd95
 
 PODFILE CHECKSUM: cc1f88378b4bfcf93a6ce00d2c587857c6008d3b
 

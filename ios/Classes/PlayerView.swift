@@ -18,13 +18,13 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     required init(containerView: UIView, setting:PlayerSetting) {
         self.containerView = containerView
+        self.setting = setting
         super.init(frame: .zero)
         let audioSession = AVAudioSession.sharedInstance()
         do {
             currentVolume = audioSession.outputVolume
             try audioSession.setCategory(.playback)
             try audioSession.setActive(true, options: [])
-            
         } catch {
             print("Setting category to AVAudioSessionCategoryPlayback failed.")
         }
@@ -34,6 +34,14 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         toggleNetwork();
         bindActions();
         bindGestures();
+        if(setting.playingItems.count == 0) {
+            self.delegate?.showToast(message:"No available playing items", type: ToastType.warning)
+            return;
+        }
+        NotificationCenter.default.addObserver(self, selector: #selector(self.playerDidFinishPlaying(sender:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        if(setting.autoPlay) {
+            self.play(with: setting.playingItems[0] )
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -41,9 +49,10 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     }
     
     var playerItemContext = 0
-    var isFullScreen = false;
+    var isFullScreen = false
     var playerItem: AVPlayerItem?
-    var containerView:UIView;
+    var containerView:UIView
+    var setting:PlayerSetting
     var pipController: AVPictureInPictureController!
     var pipPossibleObservation: NSKeyValueObservation?
     var duration:Float64 = 0;
@@ -54,11 +63,11 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     var currentSliderTime = CGFloat(0)
     var gestureSwipeEvent = GestureEvent.none
     var baseOffset = CGFloat(12)
-
+    
     var hideControlWork:DispatchWorkItem?
     
-    lazy var viewController:UIViewController = {
-        let _viewController = UIViewController();
+    lazy var viewController:LandscapeViewController = {
+        let _viewController = LandscapeViewController();
         _viewController.modalPresentationStyle = .fullScreen
         return _viewController;
     }()
@@ -70,9 +79,20 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         return button
     }()
     
+    lazy var errorMessage:UILabel = {
+        let label = UILabel();
+        label.textColor = .white
+        label.layer.masksToBounds = false
+        label.layer.shadowRadius = 2.0
+        label.layer.shadowOpacity = 0.5
+        label.layer.shadowOffset = CGSize(width: 1, height: 2)
+        label.font = UIFont.systemFont(ofSize: 16)
+        label.numberOfLines = 4
+        return label
+    }()
+    
     lazy var title:UILabel = {
         let label = UILabel();
-        label.text = "This is a custom label,This is a custom label,This is a custom label,This is a custom label"
         label.textColor = .white
         label.layer.masksToBounds = false
         label.layer.shadowRadius = 2.0
@@ -129,6 +149,29 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         button.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
         button.sizeToFit()
         return button
+    }()
+    
+    lazy var playNextIcon:UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(MediaResource.shared.getImage(name: "skip_next"), for: .normal)
+        button.sizeToFit()
+        button.isHidden = true
+        return button
+    }()
+    
+    lazy var playNextLabel: PaddingLabel = {
+        let l = PaddingLabel()
+        l.textColor = .white
+        l.layer.cornerRadius = 10
+        l.layer.masksToBounds = true
+        l.backgroundColor = .black.withAlphaComponent(0.7)
+        l.isHidden = true
+        l.paddingTop = 6
+        l.paddingBottom = 6
+        l.paddingLeft = 10
+        l.paddingRight = 10
+        l.font = UIFont.systemFont(ofSize: 10)
+        return l
     }()
     
     lazy var videoSlider: VideoSlider = {
@@ -205,13 +248,17 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     func setupUI() {
         self.addSubview(timerDraggingView)
+        self.addSubview(errorMessage)
+        self.addSubview(playNextLabel)
         self.addSubview(videoControllContainer)
+
         videoControllContainer.addSubview(gradientBottomView)
         videoControllContainer.addSubview(backIcon)
         videoControllContainer.addSubview(title)
         videoControllContainer.addSubview(timeLabel)
         videoControllContainer.addSubview(networkView)
         videoControllContainer.addSubview(playIcon)
+        videoControllContainer.addSubview(playNextIcon)
         videoControllContainer.addSubview(pipIcon)
         videoControllContainer.addSubview(fullscreenIcon)
         videoControllContainer.addSubview(rateIcon)
@@ -219,6 +266,17 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         videoControllContainer.addSubview(currentTimeLabel)
         videoControllContainer.addSubview(durationTimeLabel)
         timerDraggingView.addSubview(timerDraggingLabel)
+        
+        errorMessage.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.left.equalToSuperview().offset(20)
+            make.right.equalToSuperview().offset(-20)
+        }
+        
+        playNextLabel.snp.makeConstraints { make in
+            make.left.equalToSuperview().offset(baseOffset)
+            make.bottom.equalToSuperview().offset(-12)
+        }
         
         videoControllContainer.snp.makeConstraints { make in
             make.edges.equalTo(self)
@@ -256,6 +314,11 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             make.left.equalTo(videoControllContainer).offset(baseOffset)
         }
         
+        playNextIcon.snp.makeConstraints { make in
+            make.centerY.equalTo(playIcon)
+            make.left.equalTo(playIcon.snp.right).offset(baseOffset)
+        }
+        
         fullscreenIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo(videoControllContainer).offset(baseOffset * -1)
@@ -265,6 +328,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             make.centerY.equalTo(playIcon)
             make.right.equalTo(fullscreenIcon.snp.left).offset(baseOffset * -1)
         }
+        
         rateIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo((pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
@@ -302,6 +366,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     func bindActions() {
         backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchUpInside)
         playIcon.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
+        playNextIcon.addTarget(self, action: #selector(playNext), for: .touchUpInside)
         pipIcon.addTarget(self, action: #selector(pipIconClicked), for: .touchUpInside)
         videoSlider.addTarget(self, action: #selector(onVideoSliderValChanged(slider:event:)), for: .valueChanged)
         fullscreenIcon.addTarget(self, action: #selector(fullscreenIconClicked), for: .touchUpInside)
@@ -323,6 +388,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     deinit {
         playerItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
+        NotificationCenter.default.removeObserver(self)
         print("deinit of PlayerView")
     }
 }

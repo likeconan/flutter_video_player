@@ -10,10 +10,15 @@ import AVKit
 
 extension PlayerView {
     
-    func play(with url: URL) {
+    func play(with item: PlayingItem) {
+        guard let url = URL(string: item.url) else {
+            // todo error
+            return;}
         setUpAsset(with: url) { [weak self] (asset: AVAsset) in
             self?.setUpPlayerItem(with: asset)
         }
+        self.title.text = item.title
+        togglePlayNextLabel(show: false)
     }
     
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
@@ -25,17 +30,20 @@ extension PlayerView {
             case .loaded:
                 completion?(asset)
             case .failed:
-                print(".failed")
+                self.errorMessage.isHidden = true
+                self.errorMessage.text = "Asset failed to load."
             case .cancelled:
-                print(".cancelled")
+                self.errorMessage.isHidden = true
+                self.errorMessage.text = "Asset cancelled to play."
             default:
-                print("default")
+                self.errorMessage.text = "Asset cannot play with unknow reason."
             }
         }
     }
     
     private func setUpPlayerItem(with asset: AVAsset) {
         self.playerItem = AVPlayerItem(asset: asset)
+        //        self.playerItem?.preferredPeakBitRate = 200000.0
         self.playerItem?.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.status), options: [.old, .new], context: &playerItemContext)
         
         DispatchQueue.main.async { [weak self] in
@@ -48,7 +56,6 @@ extension PlayerView {
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        // Only handle observations for the playerItemContext
         guard context == &playerItemContext else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
             return
@@ -61,21 +68,38 @@ extension PlayerView {
             } else {
                 status = .unknown
             }
-            // Switch over status value
             switch status {
             case .readyToPlay:
-                print(".readyToPlay")
                 player?.play()
                 toggleControl();
+                errorMessage.isHidden = true
                 playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
             case .failed:
-                print(".failed")
+                errorMessage.text = "Player failed to play."
+                errorMessage.isHidden = false
             case .unknown:
-                print(".unknown")
+                errorMessage.text = "Player cannot play with unkown reason."
+                errorMessage.isHidden = false
             @unknown default:
-                print("@unknown default")
+                errorMessage.text = "Player has something wrong."
+                errorMessage.isHidden = false
             }
         }
+    }
+    
+    @objc func playNext() {
+        guard let ind = getCurrentPlayIndex() else {return}
+        if(ind < setting.playingItems.count - 1) {
+            self.play(with: setting.playingItems[ind+1])
+        }else {
+            self.delegate?.showToast(message:setting.lastPlayMessage ?? "This is the last one for play.", type: ToastType.info)
+        }
+    }
+    
+    func getCurrentPlayIndex()->Int? {
+        guard let url = (self.player?.currentItem?.asset as? AVURLAsset)?.url else {return nil}
+        guard let ind = setting.playingItems.firstIndex(where: { $0.url == url.absoluteString }) else {return nil}
+        return ind;
     }
     
     @objc func backIconClicked() {
@@ -94,13 +118,10 @@ extension PlayerView {
         if let touchEvent = event.allTouches?.first {
             switch touchEvent.phase {
             case .began:
-                // handle drag began
                 timerDraggingView.isHidden = false
             case .moved:
-                // handle drag moved
                 timerDraggingLabel.text = formatTime(seconds: Double(slider.value)) + " / " + (durationTimeLabel.text ?? "00:00")
             case .ended:
-                // handle drag ended
                 seekTo()
             default:
                 break
@@ -119,30 +140,27 @@ extension PlayerView {
         }
     }
     
-    func toggleFullscreen(isFullScreen:Bool, shouldRotate:Bool = true) {
+    func toggleFullscreen(isFullScreen:Bool) {
         if(self.isFullScreen == isFullScreen){
             return;
         }
         self.isFullScreen = isFullScreen;
+        var keyWindow:UIWindow?;
+        if #available(iOS 13.0, *) {
+            keyWindow = UIApplication.shared.connectedScenes
+                .filter({$0.activationState == .foregroundActive})
+                .compactMap({$0 as? UIWindowScene})
+                .first?.windows
+                .filter({$0.isKeyWindow}).first
+            
+        } else {
+            keyWindow = UIApplication.shared.keyWindow
+        }
+        if(keyWindow == nil) {
+            self.delegate?.showToast(message:setting.lastPlayMessage ?? "Cannot find root window.", type: ToastType.error)
+            return;
+        }
         if(isFullScreen) {
-            var keyWindow:UIWindow?;
-            if #available(iOS 13.0, *) {
-                keyWindow = UIApplication.shared.connectedScenes
-                    .filter({$0.activationState == .foregroundActive})
-                    .compactMap({$0 as? UIWindowScene})
-                    .first?.windows
-                    .filter({$0.isKeyWindow}).first
-                
-            } else {
-                keyWindow = UIApplication.shared.keyWindow
-            }
-            if(keyWindow == nil) {
-                // todo toast message?
-                return;
-            }
-            if(shouldRotate){
-                UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
-            }
             self.removeFromSuperview();
             self.viewController.view.addSubview(self);
             self.snp.makeConstraints({ make in
@@ -152,16 +170,20 @@ extension PlayerView {
         }else {
             self.removeFromSuperview();
             self.viewController.dismiss(animated: true);
-            self.containerView.addSubview(self)
-            self.containerView.backgroundColor = .yellow;
-            self.snp.makeConstraints({ make in
-                make.edges.equalTo(self.containerView)
-            })
-            if(shouldRotate){
-                UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
+            DispatchQueue.main.async {
+                self.containerView.addSubview(self)
+                self.snp.makeConstraints({ make in
+                    make.edges.equalTo(self.containerView)
+                })
             }
         }
-        rateIcon.isHidden = isFullScreen ? false : true
+        rateIcon.isHidden = !isFullScreen
+        playNextIcon.isHidden = !isFullScreen
+        currentTimeLabel.snp.remakeConstraints { make in
+            make.centerY.equalTo(playIcon)
+            make.width.equalTo(36)
+            make.left.equalTo(isFullScreen ? playNextIcon.snp.right : playIcon.snp.right).offset(baseOffset)
+        }
         durationTimeLabel.snp.remakeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo(isFullScreen ? rateIcon.snp.left : (pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left) ).offset(baseOffset * -1)
@@ -175,7 +197,6 @@ extension PlayerView {
         self.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main) { (CMTime) -> Void in
             if self.player!.currentItem?.status == .readyToPlay {
                 let time : Float64 = CMTimeGetSeconds(self.player!.currentTime());
-                print(time)
                 if(self.timerDraggingView.isHidden) {
                     self.videoSlider.value = Float(time);
                 }
@@ -184,7 +205,18 @@ extension PlayerView {
                 self.currentTimeLabel.snp.updateConstraints { make in
                     make.width.equalTo(timer.count > 5 ? 54 : 36)
                 }
+                if(time >= self.duration - 5) {
+                    if let ind = self.getCurrentPlayIndex(),
+                       ind + 1 < self.setting.playingItems.count{
+                        self.playNextLabel.text = "Going to play next video \(self.setting.playingItems[ind+1].title ?? "")"
+                        self.togglePlayNextLabel(show: true)
+                    }
+                } else {
+                    self.togglePlayNextLabel(show: false)
+                }
             }
+            
+            self.errorMessage.isHidden = true
             let playbackLikelyToKeepUp = self.player?.currentItem?.isPlaybackLikelyToKeepUp
             if playbackLikelyToKeepUp == false{
                 print("IsBuffering")
@@ -196,6 +228,18 @@ extension PlayerView {
                 //                self.ButtonPlay.isHidden = false
                 //                self.loadingView.isHidden = true
             }
+        }
+    }
+    
+    func togglePlayNextLabel(show:Bool?) {
+        if(show == nil && !self.playNextLabel.isHidden) {
+            self.playNextLabel.snp.remakeConstraints { make in
+                make.left.equalToSuperview().offset(self.baseOffset)
+                make.bottom.equalToSuperview().offset(self.videoControllContainer.isHidden ? -12 : -48)
+            }
+        }
+        if let s = show {
+            self.playNextLabel.isHidden = !s
         }
     }
     
@@ -225,6 +269,10 @@ extension PlayerView {
         } else {
             self.pipController.startPictureInPicture()
         }
+    }
+    
+    @objc func playerDidFinishPlaying(sender: Notification) {
+        playNext()
     }
 }
 

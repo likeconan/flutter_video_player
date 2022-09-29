@@ -46,7 +46,10 @@ class _MyAppState extends State<MyApp> {
                   child: VideoPlayer([
                     PlayingItem(
                         "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-                        title: "Rabbit")
+                        title: "Rabbit"),
+                    PlayingItem(
+                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+                        title: "BigBop"),
                   ]),
                 ),
                 ElevatedButton(

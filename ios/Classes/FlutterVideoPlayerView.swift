@@ -8,6 +8,7 @@
 import Flutter
 import UIKit
 import SnapKit
+import ToastViewSwift
 
 class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     private var messenger: FlutterBinaryMessenger
@@ -19,7 +20,7 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     }
     
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
-          return FlutterStandardMessageCodec.sharedInstance()
+        return FlutterStandardMessageCodec.sharedInstance()
     }
     
     func create(
@@ -37,11 +38,9 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
 }
 
 class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
-    
-    
     private var _view: UIView
     private var _playerContainer: UIView;
-    private var playerView: PlayerView!
+    private var playerView: PlayerView?
     private var _channle:FlutterMethodChannel;
     
     init(
@@ -64,19 +63,30 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         self._channle.setMethodCallHandler { call, result in
             if(call.method == "toggleFullScreen") {
                 if let args = call.arguments as? Dictionary<String, Any>,
-                   let isFullScreen = args["isFullScreen"] as? Bool,
-                   let shouldRotate = args["shouldRotate"] as? Bool{
-                    self.playerView.toggleFullscreen(isFullScreen:isFullScreen,shouldRotate:shouldRotate)
+                   let isFullScreen = args["isFullScreen"] as? Bool{
+                    self.playerView?.toggleFullscreen(isFullScreen:isFullScreen)
                     result(nil)
                 } else {
                     result(FlutterError.init(code: "errorSetParameter", message: "data or format error", details: nil))
                 }
-                
-                result(nil)
+            } else if (call.method == "play") {
+                if let args = call.arguments as? Dictionary<String, Any>,
+                   let url = args["url"] as? String{
+                    let item = PlayingItem(url:url, title: args["title"] as? String)
+                    self.playerView?.play(with: item)
+                    result(nil)
+                } else {
+                    result(FlutterError.init(code: "errorSetParameter", message: "data or format error", details: nil))
+                }
+            } else {
+                result(FlutterError.init(code: "noMethodFound", message: "no related method found" + call.method, details: nil))
             }
         }
         NotificationCenter.default.addObserver(self, selector: #selector(
             rotated), name: UIDevice.orientationDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(appWillEnterForegroundNotification),
+                                               name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     func view() -> UIView {
@@ -84,41 +94,59 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
     }
     
     func createNativeView(view _view: UIView, arguments args: Any?){
+        _view.backgroundColor = .black
         guard let args = args as? Dictionary<String, Any>,
               let autoPlay = args["autoPlay"] as? Bool,
               let enablePreventScreenCapture = args["enablePreventScreenCapture"] as? Bool,
               let enableMarquee = args["enableMarquee"] as? Bool,
               let defaultFullScreen = args["defaultFullScreen"] as? Bool,
               let items = args["playingItems"] as? [Dictionary<String, Any>]
-        else {return}
+        else {
+            showToast(message: "Setting is not right, cannot initial player.")
+            return}
         let protectionText = args["protectionText"] as? String
         let marqueeText = args["marqueeText"] as? String
+        let lastPlayMessage = args["lastPlayMessage"] as? String
         let position = args["position"] as? Double
         var playingItems = [PlayingItem]()
         for item in items {
             playingItems.append(PlayingItem(url: item["url"] as! String, title: item["title"] as? String))
         }
-        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, defaultFullScreen: defaultFullScreen, poisition: position, playingItems: playingItems)
+        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, defaultFullScreen: defaultFullScreen, poisition: position, playingItems: playingItems, lastPlayMessage: lastPlayMessage)
         playerView = PlayerView(containerView: _view,setting: param)
-        _view.addSubview(playerView)
-        playerView.snp.makeConstraints { (make) -> Void in
+        _view.addSubview(playerView!)
+        playerView?.snp.makeConstraints { (make) -> Void in
             make.edges.equalTo(_view)
         }
-        //        playerView.play(with: url)
+        playerView?.delegate = self;
     }
     
     @objc func rotated() {
         if UIDevice.current.orientation.isLandscape {
-            self.playerView.toggleFullscreen(isFullScreen:true, shouldRotate: false)
+            self.playerView?.toggleFullscreen(isFullScreen:true)
         } else {
-            self.playerView.toggleFullscreen(isFullScreen:false, shouldRotate: false)
+            self.playerView?.toggleFullscreen(isFullScreen:false)
         }
+    }
+    
+    @objc func appWillEnterForegroundNotification() {
+        self.playerView?.player?.play()
     }
     
     func onBack() {
         self._channle.invokeMethod("onBack", arguments: nil)
     }
     
+    func showToast(message:String, type:ToastType = ToastType.warning) {
+        let appleToastView = AppleToastView(child: CustomTextToastView(message),minHeight: 32, darkBackgroundColor: type.toColor(), lightBackgroundColor:type.toColor())
+        let toast = Toast.custom(view: appleToastView)
+        toast.show()
+        
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 }
 
 

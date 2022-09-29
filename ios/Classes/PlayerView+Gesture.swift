@@ -29,7 +29,7 @@ extension PlayerView {
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(panedView(_:)))
         self.addGestureRecognizer(panGestureRecognizer)
     }
-
+    
     func bindDoubleTap() {
         let tapGR = UITapGestureRecognizer(target:self,action:#selector(togglePlay))
         tapGR.numberOfTapsRequired = 2
@@ -57,9 +57,14 @@ extension PlayerView {
         self.videoControllContainer.isHidden = false
         toggleTimeLabel()
         toggleNetwork()
+        togglePlayNextLabel(show: nil)
         self.hideControlWork?.cancel()
         self.hideControlWork = DispatchWorkItem(block: {
             self.videoControllContainer.isHidden = true;
+            self.playNextLabel.snp.remakeConstraints { make in
+                make.left.equalToSuperview().offset(self.baseOffset)
+                make.bottom.equalToSuperview().offset(self.videoControllContainer.isHidden ? -12 : -48)
+            }
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: self.hideControlWork!)
     }
@@ -133,10 +138,12 @@ extension PlayerView {
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { path in
             if path.status == .satisfied {
-                if path.usesInterfaceType(.wifi) {
-                    self.networkView.image = MediaResource.shared.getImage(name: "wifi")
-                } else if path.usesInterfaceType(.cellular) {
-                    self.networkView.image = MediaResource.shared.getImage(name: "cellular")
+                DispatchQueue.main.sync {
+                    if path.usesInterfaceType(.wifi) {
+                        self.networkView.image = MediaResource.shared.getImage(name: "wifi")
+                    } else if path.usesInterfaceType(.cellular) {
+                        self.networkView.image = MediaResource.shared.getImage(name: "cellular")
+                    }
                 }
             } else if path.status == .unsatisfied {
                 
