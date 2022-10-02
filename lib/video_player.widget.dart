@@ -13,7 +13,6 @@ class VideoPlayer extends StatefulWidget {
   final bool enablePreventScreenCapture;
   final String? marqueeText;
   final bool enableMarquee;
-  final bool defaultFullScreen;
   final double? position;
   final List<PlayingItem> playingItems;
   VideoPlayer(
@@ -23,7 +22,6 @@ class VideoPlayer extends StatefulWidget {
     this.enablePreventScreenCapture = false,
     this.marqueeText,
     this.enableMarquee = false,
-    this.defaultFullScreen = false,
     this.position,
   });
 
@@ -51,7 +49,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
       "enablePreventScreenCapture": widget.enablePreventScreenCapture,
       "marqueeText": widget.marqueeText,
       "enableMarquee": widget.enableMarquee,
-      "defaultFullScreen": widget.defaultFullScreen,
       "position": widget.position,
       "playingItems": widget.playingItems.map((e) => e.toJson()).toList()
     };

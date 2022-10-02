@@ -29,7 +29,6 @@ struct PlayerSetting {
     let enablePreventScreenCapture: Bool
     let marqueeText: String?
     let enableMarquee: Bool
-    let defaultFullScreen: Bool
     let poisition: Double?
     let playingItems: [PlayingItem]
     let lastPlayMessage: String?
