@@ -39,6 +39,9 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             return;
         }
         NotificationCenter.default.addObserver(self, selector: #selector(self.playerDidFinishPlaying(sender:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        if(setting.enablePreventScreenCapture) {
+            NotificationCenter.default.addObserver(self, selector: #selector(self.captureChanged), name: UIScreen.capturedDidChangeNotification, object: nil)
+        }
         if(setting.autoPlay) {
             self.play(with: setting.playingItems[0] )
         }
@@ -64,7 +67,12 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     var gestureSwipeEvent = GestureEvent.none
     var baseOffset = CGFloat(12)
     
+    var marqueeStarted:Bool = false;
+    
     var hideControlWork:DispatchWorkItem?
+    var currentPlayingItem: PlayingItem?
+    var currentTime = Double(0.0)
+    
     
     lazy var viewController:LandscapeViewController = {
         let _viewController = LandscapeViewController();
@@ -79,6 +87,24 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         return button
     }()
     
+    lazy var screenCaptureView:UIView = {
+        let v = UIView()
+        let l = UILabel()
+        l.textColor = .white
+        l.text = setting.protectionText ?? "In order to protect our digital content, please close record or share screen function"
+        l.numberOfLines = 4
+        l.font = UIFont.systemFont(ofSize: 14)
+        v.addSubview(l)
+        l.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.lessThanOrEqualTo(300)
+        }
+        l.textAlignment = .center
+        v.backgroundColor = .black
+        v.isHidden = true
+        return v
+    }()
+    
     lazy var errorMessage:UILabel = {
         let label = UILabel();
         label.textColor = .white
@@ -88,6 +114,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         label.layer.shadowOffset = CGSize(width: 1, height: 2)
         label.font = UIFont.systemFont(ofSize: 16)
         label.numberOfLines = 4
+        label.textAlignment = .center
         return label
     }()
     
@@ -233,6 +260,19 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         return view
     }()
     
+    lazy var activityIndicator: UIActivityIndicatorView = {
+        let activityIndicator = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.large)
+        activityIndicator.color = .white
+        activityIndicator.hidesWhenStopped = true
+        return activityIndicator
+    }()
+    
+    lazy var marqueeLabel:UILabel = {
+        let l = UILabel()
+        l.sizeToFit()
+        return l
+    }()
+    
     var playerLayer: AVPlayerLayer {
         return layer as! AVPlayerLayer
     }
@@ -250,8 +290,10 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         self.addSubview(timerDraggingView)
         self.addSubview(errorMessage)
         self.addSubview(playNextLabel)
+        self.addSubview(activityIndicator)
         self.addSubview(videoControllContainer)
-
+        self.addSubview(screenCaptureView)
+        
         videoControllContainer.addSubview(gradientBottomView)
         videoControllContainer.addSubview(backIcon)
         videoControllContainer.addSubview(title)
@@ -267,9 +309,18 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         videoControllContainer.addSubview(durationTimeLabel)
         timerDraggingView.addSubview(timerDraggingLabel)
         
+        activityIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        
+        screenCaptureView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
         errorMessage.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.left.equalToSuperview().offset(20)
+            make.width.lessThanOrEqualToSuperview().offset(-20)
             make.right.equalToSuperview().offset(-20)
         }
         

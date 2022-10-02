@@ -46,11 +46,12 @@ extension PlayerView {
         if(self.player?.timeControlStatus == .paused){
             self.player?.play();
             playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
-        } else if(self.player?.timeControlStatus == .playing) {
+        } else {
             self.player?.pause();
             playIcon.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
             self.hideControlWork?.cancel()
         }
+        print(self.player?.timeControlStatus.rawValue)
     }
     
     @objc func toggleControl() {

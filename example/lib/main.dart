@@ -43,14 +43,19 @@ class _MyAppState extends State<MyApp> {
                 Text("hello world"),
                 SizedBox(
                   height: 200,
-                  child: VideoPlayer([
-                    PlayingItem(
-                        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-                        title: "Rabbit"),
-                    PlayingItem(
-                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
-                        title: "BigBop"),
-                  ]),
+                  child: VideoPlayer(
+                    [
+                      PlayingItem(
+                          "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                          title: "Rabbit"),
+                      PlayingItem(
+                          "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+                          title: "BigBop"),
+                    ],
+                    enableMarquee: true,
+                    enablePreventScreenCapture: true,
+                    marqueeText: "Hello",
+                  ),
                 ),
                 ElevatedButton(
                     onPressed: () {

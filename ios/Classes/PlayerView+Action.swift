@@ -14,11 +14,23 @@ extension PlayerView {
         guard let url = URL(string: item.url) else {
             // todo error
             return;}
+        if let text = setting.marqueeText,
+           setting.enableMarquee {
+            startMarquee(text)
+        }
+        if(setting.enablePreventScreenCapture) {
+            self.captureChanged()
+        }
+        currentPlayingItem = item
         setUpAsset(with: url) { [weak self] (asset: AVAsset) in
             self?.setUpPlayerItem(with: asset)
         }
         self.title.text = item.title
         togglePlayNextLabel(show: false)
+    }
+    
+    func resume() {
+        play(with: setting.playingItems[0])
     }
     
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
@@ -42,16 +54,22 @@ extension PlayerView {
     }
     
     private func setUpPlayerItem(with asset: AVAsset) {
+        
         self.playerItem = AVPlayerItem(asset: asset)
         //        self.playerItem?.preferredPeakBitRate = 200000.0
         self.playerItem?.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.status), options: [.old, .new], context: &playerItemContext)
         
         DispatchQueue.main.async { [weak self] in
-            self?.player = AVPlayer(playerItem: self?.playerItem!)
-            self?.duration = CMTimeGetSeconds(asset.duration)
-            self?.durationTimeLabel.text = formatTime(seconds: self?.duration ?? 0)
-            self?.videoSlider.maximumValue = Float(self?.duration ?? 0)
-            self?.onProgress()
+            guard let self = self else { return }
+            self.player = AVPlayer(playerItem: self.playerItem!)
+            if(self.currentTime > 0){
+                let c:CMTime = CMTimeMake(value: Int64(self.currentTime * 1000), timescale: 1000)
+                self.player?.seek(to: c)
+            }
+            self.duration = CMTimeGetSeconds(asset.duration)
+            self.durationTimeLabel.text = formatTime(seconds: self.duration)
+            self.videoSlider.maximumValue = Float(self.duration)
+            self.onProgress()
         }
     }
     
@@ -90,6 +108,7 @@ extension PlayerView {
     @objc func playNext() {
         guard let ind = getCurrentPlayIndex() else {return}
         if(ind < setting.playingItems.count - 1) {
+            self.currentTime = 0
             self.play(with: setting.playingItems[ind+1])
         }else {
             self.delegate?.showToast(message:setting.lastPlayMessage ?? "This is the last one for play.", type: ToastType.info)
@@ -130,11 +149,11 @@ extension PlayerView {
     }
     
     func seekTo() {
-        if player == nil { return }
+        guard let p = self.player else {return}
         let selectedTime: CMTime = CMTimeMake(value: Int64(videoSlider.value * 1000), timescale: 1000)
-        player?.seek(to: selectedTime)
-        player?.pause()
-        player?.play()
+        p.seek(to: selectedTime)
+        p.pause()
+        p.play()
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.5) {
             self.timerDraggingView.isHidden = true
         }
@@ -196,16 +215,16 @@ extension PlayerView {
     func onProgress() {
         self.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main) { (CMTime) -> Void in
             if self.player!.currentItem?.status == .readyToPlay {
-                let time : Float64 = CMTimeGetSeconds(self.player!.currentTime());
+                self.currentTime = CMTimeGetSeconds(self.player!.currentTime());
                 if(self.timerDraggingView.isHidden) {
-                    self.videoSlider.value = Float(time);
+                    self.videoSlider.value = Float(self.currentTime);
                 }
-                let timer = formatTime(seconds: time)
+                let timer = formatTime(seconds: self.currentTime)
                 self.currentTimeLabel.text = timer
                 self.currentTimeLabel.snp.updateConstraints { make in
                     make.width.equalTo(timer.count > 5 ? 54 : 36)
                 }
-                if(time >= self.duration - 5) {
+                if(self.currentTime >= self.duration - 5) {
                     if let ind = self.getCurrentPlayIndex(),
                        ind + 1 < self.setting.playingItems.count{
                         self.playNextLabel.text = "Going to play next video \(self.setting.playingItems[ind+1].title ?? "")"
@@ -219,14 +238,9 @@ extension PlayerView {
             self.errorMessage.isHidden = true
             let playbackLikelyToKeepUp = self.player?.currentItem?.isPlaybackLikelyToKeepUp
             if playbackLikelyToKeepUp == false{
-                print("IsBuffering")
-                //                self.ButtonPlay.isHidden = true
-                //                self.loadingView.isHidden = false
+                self.activityIndicator.startAnimating()
             } else {
-                //                //stop the activity indicator
-                print("Buffering completed")
-                //                self.ButtonPlay.isHidden = false
-                //                self.loadingView.isHidden = true
+                self.activityIndicator.stopAnimating()
             }
         }
     }
@@ -273,6 +287,16 @@ extension PlayerView {
     
     @objc func playerDidFinishPlaying(sender: Notification) {
         playNext()
+    }
+    
+    @objc func captureChanged() {
+        self.screenCaptureView.isHidden = !UIScreen.main.isCaptured
+        if(UIScreen.main.isCaptured) {
+            self.bringSubviewToFront(screenCaptureView)
+            self.player?.pause()
+        }else {
+            self.player?.play()
+        }
     }
 }
 

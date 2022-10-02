@@ -122,15 +122,24 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
     }
     
     @objc func rotated() {
-        if UIDevice.current.orientation.isLandscape {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, windowScene.activationState == .foregroundActive, let _ = windowScene.windows.first else { return }
+        if windowScene.interfaceOrientation.isLandscape {
             self.playerView?.toggleFullscreen(isFullScreen:true)
-        } else {
+        } else if windowScene.interfaceOrientation.isPortrait {
             self.playerView?.toggleFullscreen(isFullScreen:false)
         }
     }
     
     @objc func appWillEnterForegroundNotification() {
-        self.playerView?.player?.play()
+        self.playerView?.activityIndicator.startAnimating()
+        print(self.playerView?.player?.timeControlStatus.rawValue)
+        if(self.playerView?.player?.timeControlStatus == .waitingToPlayAtSpecifiedRate){
+            print("resume to play")
+            self.playerView?.resume()
+        }else {
+            self.playerView?.player?.play()
+        }
+        
     }
     
     func onBack() {
@@ -143,8 +152,9 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         toast.show()
         
     }
-
+    
     deinit {
+        print("deinit in flutter video player")
         NotificationCenter.default.removeObserver(self)
     }
 }
