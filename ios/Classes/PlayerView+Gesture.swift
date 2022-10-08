@@ -40,6 +40,9 @@ extension PlayerView {
         let tapGR = UITapGestureRecognizer(target:self,action:#selector(toggleControl))
         tapGR.numberOfTapsRequired = 1
         self.addGestureRecognizer(tapGR)
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(sliderTapped))
+        self.videoSlider.addGestureRecognizer(tap)
     }
     
     @objc func togglePlay() {
@@ -51,7 +54,18 @@ extension PlayerView {
             playIcon.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
             self.hideControlWork?.cancel()
         }
-        print(self.player?.timeControlStatus.rawValue)
+    }
+    
+    @objc func sliderTapped(gestureRecognizer: UILongPressGestureRecognizer) {
+        let width = videoSlider.frame.size.width;
+        let tapPoint = gestureRecognizer.location(in: videoSlider)
+        let fP = tapPoint.x / width;
+        let newV = videoSlider.maximumValue * Float(fP) + 0.5;
+        if(newV != videoSlider.value) {
+            videoSlider.value = newV
+        }
+        seekTo()
+        toggleControl()
     }
     
     @objc func toggleControl() {

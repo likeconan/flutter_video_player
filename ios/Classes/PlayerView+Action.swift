@@ -134,7 +134,9 @@ extension PlayerView {
     }
     
     @objc func onVideoSliderValChanged(slider: UISlider, event: UIEvent) {
+        print("value changed")
         if let touchEvent = event.allTouches?.first {
+            print(touchEvent.phase.rawValue)
             switch touchEvent.phase {
             case .began:
                 timerDraggingView.isHidden = false
