@@ -103,15 +103,20 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         else {
             showToast(message: "Setting is not right, cannot initial player.")
             return}
+        if(items.count == 0) {
+            showToast(message: "Playing items must be greater than 0")
+        }
         let protectionText = args["protectionText"] as? String
         let marqueeText = args["marqueeText"] as? String
         let lastPlayMessage = args["lastPlayMessage"] as? String
         let position = args["position"] as? Double
+        let posterImage = args["posterImg"] as? String
+        let hideBackButton = args["hideBackButton"] as? Bool
         var playingItems = [PlayingItem]()
         for item in items {
             playingItems.append(PlayingItem(url: item["url"] as! String, title: item["title"] as? String))
         }
-        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, poisition: position, playingItems: playingItems, lastPlayMessage: lastPlayMessage)
+        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, poisition: position, playingItems: playingItems, lastPlayMessage: lastPlayMessage, posterImage: posterImage, hideBackButton: hideBackButton ?? false)
         playerView = PlayerView(containerView: _view,setting: param)
         _view.addSubview(playerView!)
         playerView?.snp.makeConstraints { (make) -> Void in

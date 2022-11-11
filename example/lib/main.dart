@@ -55,6 +55,7 @@ class _MyAppState extends State<MyApp> {
                     enableMarquee: true,
                     enablePreventScreenCapture: true,
                     marqueeText: "Hello",
+                    autoPlay: false,
                   ),
                 ),
                 ElevatedButton(

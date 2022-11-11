@@ -15,7 +15,9 @@ class VideoPlayer extends StatefulWidget {
   final bool enableMarquee;
   final double? position;
   final List<PlayingItem> playingItems;
-  VideoPlayer(
+  final String? posterImage;
+  final bool hideBackButton;
+  const VideoPlayer(
     this.playingItems, {
     this.autoPlay = true,
     this.protectionText,
@@ -23,7 +25,10 @@ class VideoPlayer extends StatefulWidget {
     this.marqueeText,
     this.enableMarquee = false,
     this.position,
-  });
+    this.posterImage,
+    this.hideBackButton = false,
+    Key? key,
+  }) : super(key: key);
 
   @override
   _VideoPlayerState createState() => _VideoPlayerState();
@@ -50,7 +55,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
       "marqueeText": widget.marqueeText,
       "enableMarquee": widget.enableMarquee,
       "position": widget.position,
-      "playingItems": widget.playingItems.map((e) => e.toJson()).toList()
+      "playingItems": widget.playingItems.map((e) => e.toJson()).toList(),
+      "posterImage": widget.posterImage,
+      "hideBackButton": widget.hideBackButton,
     };
     if (TargetPlatform.android == defaultTargetPlatform) {
       return PlatformViewLink(

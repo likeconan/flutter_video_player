@@ -32,8 +32,6 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         setupPictureInPicture();
         setupUI();
         toggleNetwork();
-        bindActions();
-        bindGestures();
         if(setting.playingItems.count == 0) {
             self.delegate?.showToast(message:"No available playing items", type: ToastType.warning)
             return;
@@ -44,6 +42,8 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         }
         if(setting.autoPlay) {
             self.play(with: setting.playingItems[0] )
+        } else {
+            togglePoster(show: true)
         }
     }
     
@@ -85,6 +85,23 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         button.setImage(MediaResource.shared.getImage(name: "arrow_back"), for: .normal)
         button.sizeToFit()
         return button
+    }()
+    
+    lazy var posterBackIcon:UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(MediaResource.shared.getImage(name: "arrow_back"), for: .normal)
+        button.sizeToFit()
+        return button
+    }()
+    
+    lazy var posterImg: UIImageView = {
+        let v = UIImageView()
+        v.contentMode = .scaleAspectFill
+        v.clipsToBounds = true
+        v.isHidden = true
+        v.image = MediaResource.shared.getImage(name: "video_poster")
+        v.backgroundColor = .black;
+        return v;
     }()
     
     lazy var screenCaptureView:UIView = {
@@ -293,7 +310,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         self.addSubview(activityIndicator)
         self.addSubview(videoControllContainer)
         self.addSubview(screenCaptureView)
-        
+
         videoControllContainer.addSubview(gradientBottomView)
         videoControllContainer.addSubview(backIcon)
         videoControllContainer.addSubview(title)
@@ -343,6 +360,8 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             make.top.equalTo(self).offset(baseOffset)
             make.left.equalTo(self).offset(baseOffset)
         }
+        
+        backIcon.isHidden = setting.hideBackButton
         
         title.snp.makeConstraints { make in
             make.centerY.equalTo(backIcon)

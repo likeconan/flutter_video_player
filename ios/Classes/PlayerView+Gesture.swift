@@ -46,6 +46,11 @@ extension PlayerView {
     }
     
     @objc func togglePlay() {
+        if(self.player?.timeControlStatus == nil) {
+            self.play(with: setting.playingItems[(getCurrentPlayIndex() ?? 0)])
+            playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
+            return;
+        }
         if(self.player?.timeControlStatus == .paused){
             self.player?.play();
             playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)

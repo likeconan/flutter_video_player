@@ -14,6 +14,8 @@ extension PlayerView {
         guard let url = URL(string: item.url) else {
             // todo error
             return;}
+        self.posterImg.removeFromSuperview()
+        self.videoControllContainer.isHidden = false
         if let text = setting.marqueeText,
            setting.enableMarquee {
             startMarquee(text)
@@ -22,6 +24,9 @@ extension PlayerView {
             self.captureChanged()
         }
         currentPlayingItem = item
+        bindGestures()
+        bindActions()
+        self.activityIndicator.startAnimating()
         setUpAsset(with: url) { [weak self] (asset: AVAsset) in
             self?.setUpPlayerItem(with: asset)
         }
@@ -30,7 +35,7 @@ extension PlayerView {
     }
     
     func resume() {
-        play(with: setting.playingItems[0])
+        play(with: setting.playingItems[getCurrentPlayIndex() ?? 0])
     }
     
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
@@ -161,6 +166,36 @@ extension PlayerView {
         }
     }
     
+    func togglePoster(show:Bool) {
+        if(show) {
+            self.addSubview(posterImg)
+            posterImg.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+            self.posterImg.isHidden = false
+            if(!setting.hideBackButton) {
+                self.addSubview(posterBackIcon)
+                posterBackIcon.snp.makeConstraints { make in
+                    make.top.equalTo(self).offset(baseOffset)
+                    make.left.equalTo(self).offset(baseOffset)
+                }
+                posterBackIcon.addTarget(self, action: #selector(backIconClicked), for: .touchUpInside)
+            }
+            let tap = UITapGestureRecognizer(target: self, action: #selector(handlePosterImageClicked))
+            posterImg.addGestureRecognizer(tap)
+            posterImg.isUserInteractionEnabled = true
+            if(setting.posterImage != nil) {
+                self.posterImg.load(url: URL(string: "https://dev-assets.easyeduapp.com/fit-in/1280x720/common/templates/default/courses/course10.png")!)
+            }
+        } else {
+            self.posterImg.removeFromSuperview()
+        }
+       
+    }
+    @objc private func handlePosterImageClicked() {
+        self.play(with: setting.playingItems[getCurrentPlayIndex() ?? 0])
+    }
+    
     func toggleFullscreen(isFullScreen:Bool) {
         if(self.isFullScreen == isFullScreen){
             return;
@@ -183,6 +218,7 @@ extension PlayerView {
         }
         if(isFullScreen) {
             self.removeFromSuperview();
+            self.backIcon.isHidden = false;
             self.viewController.view.addSubview(self);
             self.snp.makeConstraints({ make in
                 make.edges.equalTo(self.viewController.view)
@@ -193,6 +229,7 @@ extension PlayerView {
             self.viewController.dismiss(animated: true);
             DispatchQueue.main.async {
                 self.containerView.addSubview(self)
+                self.backIcon.isHidden = self.setting.hideBackButton;
                 self.snp.makeConstraints({ make in
                     make.edges.equalTo(self.containerView)
                 })

@@ -17,25 +17,27 @@ extension PlayerView {
         marqueeLabel.text = text
         marqueeLabel.sizeToFit()
         marqueeLabel.attributedText = attrStri
+        marqueeLabel.isHidden = true
     }
     
     func startMarquee(_ text: String) {
-        if(marqueeStarted) {
+        if (marqueeStarted) {
             return
         }
-        marqueeStarted = true;
+        marqueeStarted = true
         marqueeLabel.layer.removeAllAnimations()
         marqueeLabel.removeFromSuperview()
         initMarquee(text)
         self.addSubview(marqueeLabel)
         let fullscreen = self.isFullScreen
-        let width = UIScreen.main.bounds.size.width;
-        let _altitude = marqueeLabel.frame.size.height;
-        let _len = marqueeLabel.frame.size.width;
+        let width = UIScreen.main.bounds.size.width
+        let _altitude = marqueeLabel.frame.size.height
+        let _len = marqueeLabel.frame.size.width
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
+            self.marqueeLabel.isHidden = false
             var y = max(self.bounds.size.height, 100);
             y = CGFloat.random(in: (_altitude + 20)..<(y - 20));
-            self.marqueeLabel.frame = CGRect(x: _len, y: y, width: _len, height:_altitude);
+            self.marqueeLabel.frame = CGRect(x: _len * -2, y: y, width: _len, height:_altitude);
             UIView.animate(withDuration: fullscreen ? 10 : 6, delay: 0, options: UIView.AnimationOptions.curveLinear) { [self] in
                 self.marqueeLabel.frame = CGRect(x: width + _len * 2, y: y, width: _len, height:_altitude);
             } completion: { [self] finished in
