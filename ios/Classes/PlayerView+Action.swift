@@ -15,6 +15,7 @@ extension PlayerView {
             // todo error
             return;}
         self.posterImg.removeFromSuperview()
+        self.posterBackIcon.removeFromSuperview()
         self.videoControllContainer.isHidden = false
         if let text = setting.marqueeText,
            setting.enableMarquee {
@@ -96,7 +97,7 @@ extension PlayerView {
                 player?.play()
                 toggleControl();
                 errorMessage.isHidden = true
-                playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
+                playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
             case .failed:
                 errorMessage.text = "Player failed to play."
                 errorMessage.isHidden = false
@@ -179,7 +180,7 @@ extension PlayerView {
                     make.top.equalTo(self).offset(baseOffset)
                     make.left.equalTo(self).offset(baseOffset)
                 }
-                posterBackIcon.addTarget(self, action: #selector(backIconClicked), for: .touchUpInside)
+                posterBackIcon.addTarget(self, action: #selector(backIconClicked), for: .touchDown)
             }
             let tap = UITapGestureRecognizer(target: self, action: #selector(handlePosterImageClicked))
             posterImg.addGestureRecognizer(tap)
@@ -235,7 +236,6 @@ extension PlayerView {
                 })
             }
         }
-        rateIcon.isHidden = !isFullScreen
         playNextIcon.isHidden = !isFullScreen
         currentTimeLabel.snp.remakeConstraints { make in
             make.centerY.equalTo(playIcon)
@@ -244,11 +244,11 @@ extension PlayerView {
         }
         durationTimeLabel.snp.remakeConstraints { make in
             make.centerY.equalTo(playIcon)
-            make.right.equalTo(isFullScreen ? rateIcon.snp.left : (pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left) ).offset(baseOffset * -1)
+            make.right.equalTo(pipIcon.isHidden ? rateIcon.snp.left : pipIcon.snp.left).offset(baseOffset * -1)
         }
         toggleTimeLabel()
         toggleNetwork()
-        fullscreenIcon.setImage(MediaResource.shared.getImage(name: isFullScreen ? "fullscreen_exit":"fullscreen"), for: .normal)
+        fullscreenIcon.setAllStateImage(MediaResource.shared.getImage(name: isFullScreen ? "fullscreen_exit":"fullscreen"))
     }
     
     func onProgress() {
@@ -322,6 +322,18 @@ extension PlayerView {
         } else {
             self.pipController.startPictureInPicture()
         }
+    }
+    
+    @objc func rateIconClicked() {
+        self.rateSelectionView.isHidden = !self.rateSelectionView.isHidden
+    }
+    
+    func onRateChanged(rate:Float) {
+        self.player?.rate = rate
+        self.delegate?.onRateChange(rate: rate)
+        self.rateIcon.setAllStateImage(nil)
+        self.rateIcon.setTitle("x \(rate)", for: .normal)
+        self.rateIcon.titleLabel?.font = UIFont.systemFont(ofSize: 12)
     }
     
     @objc func playerDidFinishPlaying(sender: Notification) {

@@ -48,15 +48,15 @@ extension PlayerView {
     @objc func togglePlay() {
         if(self.player?.timeControlStatus == nil) {
             self.play(with: setting.playingItems[(getCurrentPlayIndex() ?? 0)])
-            playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
+            playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
             return;
         }
         if(self.player?.timeControlStatus == .paused){
             self.player?.play();
-            playIcon.setImage(MediaResource.shared.getImage(name: "pause"), for: .normal)
+            playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
         } else {
             self.player?.pause();
-            playIcon.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
+            playIcon.setAllStateImage(MediaResource.shared.getImage(name: "play"))
             self.hideControlWork?.cancel()
         }
     }
@@ -80,7 +80,8 @@ extension PlayerView {
         togglePlayNextLabel(show: nil)
         self.hideControlWork?.cancel()
         self.hideControlWork = DispatchWorkItem(block: {
-            self.videoControllContainer.isHidden = true;
+            self.videoControllContainer.isHidden = true
+            self.rateSelectionView.isHidden = true
             self.playNextLabel.snp.remakeConstraints { make in
                 make.left.equalToSuperview().offset(self.baseOffset)
                 make.bottom.equalToSuperview().offset(self.videoControllContainer.isHidden ? -12 : -48)
@@ -193,3 +194,5 @@ extension MPVolumeView {
         return slider?.value ?? 0;
     }
 }
+
+

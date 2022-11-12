@@ -11,5 +11,6 @@ import Foundation
 protocol PlayerViewDelegate: AnyObject {
     func onBack()
     func showToast(message:String, type:ToastType)
+    func onRateChange(rate:Float)
 }
 

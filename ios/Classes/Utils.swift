@@ -195,3 +195,11 @@ extension UIImageView {
         }
     }
 }
+
+extension UIButton {
+    func setAllStateImage(_ img:UIImage?) {
+        self.setImage(img,for: .normal)
+        self.setImage(img,for: .highlighted)
+        self.setImage(img,for: .focused)
+    }
+}

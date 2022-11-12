@@ -82,14 +82,14 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     lazy var backIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "arrow_back"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "arrow_back"))
         button.sizeToFit()
         return button
     }()
     
     lazy var posterBackIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "arrow_back"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "arrow_back"))
         button.sizeToFit()
         return button
     }()
@@ -168,36 +168,42 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     
     lazy var rateIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "play_speed"), for: .normal)
-        button.isHidden = true
+        button.setAllStateImage(MediaResource.shared.getImage(name: "play_speed"))
         button.sizeToFit()
         return button
     }()
     
+    lazy var rateSelectionView:PlayRateSelectionView = {
+        let v = PlayRateSelectionView()
+        v.isHidden = true
+        v.onRateChanged = self.onRateChanged
+        return v
+    }()
+    
     lazy var fullscreenIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "fullscreen"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "fullscreen"))
         button.sizeToFit()
         return button
     }()
     
     lazy var pipIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "picture_in_picture"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "picture_in_picture"))
         button.sizeToFit()
         return button
     }()
     
     lazy var playIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "play"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "play"))
         button.sizeToFit()
         return button
     }()
     
     lazy var playNextIcon:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(MediaResource.shared.getImage(name: "skip_next"), for: .normal)
+        button.setAllStateImage(MediaResource.shared.getImage(name: "skip_next"))
         button.sizeToFit()
         button.isHidden = true
         return button
@@ -308,6 +314,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         self.addSubview(errorMessage)
         self.addSubview(playNextLabel)
         self.addSubview(activityIndicator)
+        self.addSubview(rateSelectionView)
         self.addSubview(videoControllContainer)
         self.addSubview(screenCaptureView)
 
@@ -324,6 +331,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         videoControllContainer.addSubview(videoSlider)
         videoControllContainer.addSubview(currentTimeLabel)
         videoControllContainer.addSubview(durationTimeLabel)
+        videoControllContainer.addSubview(rateSelectionView)
         timerDraggingView.addSubview(timerDraggingLabel)
         
         activityIndicator.snp.makeConstraints { make in
@@ -394,15 +402,23 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             make.right.equalTo(videoControllContainer).offset(baseOffset * -1)
         }
         
-        pipIcon.snp.makeConstraints { make in
-            make.centerY.equalTo(playIcon)
-            make.right.equalTo(fullscreenIcon.snp.left).offset(baseOffset * -1)
-        }
-        
         rateIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo((pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
         }
+        
+        rateSelectionView.snp.makeConstraints { make in
+            make.width.equalTo(rateIcon.snp.width).offset(12)
+            make.height.equalTo(80)
+            make.bottom.equalTo(rateIcon.snp.top)
+            make.left.equalTo(rateIcon.snp.left).offset(-6)
+        }
+        
+        pipIcon.snp.makeConstraints { make in
+            make.centerY.equalTo(playIcon)
+            make.right.equalTo(rateIcon.snp.left).offset(baseOffset * -1)
+        }
+        
         
         currentTimeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
@@ -419,7 +435,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         
         durationTimeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
-            make.right.equalTo((pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
+            make.right.equalTo((pipIcon.isHidden ? rateIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
         }
         
         timerDraggingView.snp.makeConstraints { make in
@@ -434,12 +450,13 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     }
     
     func bindActions() {
-        backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchUpInside)
-        playIcon.addTarget(self, action: #selector(togglePlay), for: .touchUpInside)
-        playNextIcon.addTarget(self, action: #selector(playNext), for: .touchUpInside)
-        pipIcon.addTarget(self, action: #selector(pipIconClicked), for: .touchUpInside)
+        backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchDown)
+        playIcon.addTarget(self, action: #selector(togglePlay), for: .touchDown)
+        playNextIcon.addTarget(self, action: #selector(playNext), for: .touchDown)
+        pipIcon.addTarget(self, action: #selector(pipIconClicked), for: .touchDown)
         videoSlider.addTarget(self, action: #selector(onVideoSliderValChanged(slider:event:)), for: .valueChanged)
-        fullscreenIcon.addTarget(self, action: #selector(fullscreenIconClicked), for: .touchUpInside)
+        rateIcon.addTarget(self, action: #selector(rateIconClicked), for: .touchDown)
+        fullscreenIcon.addTarget(self, action: #selector(fullscreenIconClicked), for: .touchDown)
     }
     
     func setupPictureInPicture() {

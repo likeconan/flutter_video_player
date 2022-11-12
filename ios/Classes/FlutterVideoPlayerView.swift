@@ -38,6 +38,8 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
 }
 
 class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
+
+    
     private var _view: UIView
     private var _playerContainer: UIView;
     private var playerView: PlayerView?
@@ -150,11 +152,14 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         self._channle.invokeMethod("onBack", arguments: nil)
     }
     
+    func onRateChange(rate: Float) {
+        self._channle.invokeMethod("onRateChange", arguments: rate)
+    }
+    
     func showToast(message:String, type:ToastType = ToastType.warning) {
         let appleToastView = AppleToastView(child: CustomTextToastView(message),minHeight: 32, darkBackgroundColor: type.toColor(), lightBackgroundColor:type.toColor())
         let toast = Toast.custom(view: appleToastView)
         toast.show()
-        
     }
     
     deinit {
