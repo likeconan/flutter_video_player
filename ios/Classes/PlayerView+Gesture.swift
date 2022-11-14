@@ -18,6 +18,12 @@ extension PlayerView {
         bindTap();
     }
     
+    func unbindGestures() {
+        for recognizer in self.gestureRecognizers ?? [] {
+            self.removeGestureRecognizer(recognizer)
+        }
+    }
+    
     func bindSpeed() {
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(speedUp))
         longPressRecognizer.numberOfTouchesRequired = 1

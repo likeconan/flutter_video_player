@@ -7,6 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player_oneplusdream/src/video_player_setting.model.dart';
 
+import '../video_player_oneplusdream.dart';
+
 class VideoPlayer extends StatefulWidget {
   final bool autoPlay;
   final String? protectionText;
@@ -35,11 +37,14 @@ class VideoPlayer extends StatefulWidget {
 }
 
 class _VideoPlayerState extends State<VideoPlayer> {
+  final _videoPlayerOneplusdreamPlugin = VideoPlayerOneplusdream();
   @override
   void dispose() {
     super.dispose();
-    try {} catch (e) {
-      print(e);
+    try {
+      _videoPlayerOneplusdreamPlugin.release();
+    } catch (e) {
+      print("release error $e");
     }
   }
 

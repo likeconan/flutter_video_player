@@ -39,6 +39,15 @@ extension PlayerView {
         play(with: setting.playingItems[getCurrentPlayIndex() ?? 0])
     }
     
+    func release() {
+        player?.pause()
+        player?.replaceCurrentItem(with: nil)
+        videoControllContainer.isHidden = true
+        unbindGestures()
+        marqueeLabel.layer.removeAllAnimations()
+        marqueeLabel.removeFromSuperview()
+    }
+    
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
         let asset = AVAsset(url: url)
         asset.loadValuesAsynchronously(forKeys: ["playable"]) {

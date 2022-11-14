@@ -476,6 +476,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     deinit {
         playerItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
         NotificationCenter.default.removeObserver(self)
+        release();
         print("deinit of PlayerView")
     }
 }

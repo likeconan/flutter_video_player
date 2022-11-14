@@ -80,7 +80,11 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
                 } else {
                     result(FlutterError.init(code: "errorSetParameter", message: "data or format error", details: nil))
                 }
-            } else {
+            } else if (call.method == "release") {
+                self.playerView?.release()
+                result(nil)
+            }
+            else {
                 result(FlutterError.init(code: "noMethodFound", message: "no related method found" + call.method, details: nil))
             }
         }
@@ -165,6 +169,7 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
     deinit {
         print("deinit in flutter video player")
         NotificationCenter.default.removeObserver(self)
+        self.playerView?.release()
     }
 }
 

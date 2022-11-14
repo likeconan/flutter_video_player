@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'video_player_event.model.dart';
@@ -25,7 +27,26 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  List<Future<dynamic> Function()> onBackClickedFuncList =
+      List.empty(growable: true);
+
   Future toggleFullScreen(ToggleFullScreenParam param) {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+    throw UnimplementedError('toggleFullScreen() has not been implemented.');
+  }
+
+  Future release() {
+    throw UnimplementedError('release() has not been implemented.');
+  }
+
+  void setOnBackClicked(Future<dynamic> Function() onBackClicked) {
+    onBackClickedFuncList.add(onBackClicked);
+  }
+
+  bool removeOnBackClicked(Future<dynamic> Function() onBackClicked) {
+    return onBackClickedFuncList.remove(onBackClicked);
+  }
+
+  void clearOnBackClicked() {
+    onBackClickedFuncList.clear();
   }
 }
