@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:video_player_oneplusdream/video_player_setting.model.dart';
+import 'package:video_player_oneplusdream/src/video_player_setting.model.dart';
 
 class VideoPlayer extends StatefulWidget {
   final bool autoPlay;

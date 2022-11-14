@@ -186,7 +186,7 @@ extension PlayerView {
             posterImg.addGestureRecognizer(tap)
             posterImg.isUserInteractionEnabled = true
             if(setting.posterImage != nil) {
-                self.posterImg.load(url: URL(string: "https://dev-assets.easyeduapp.com/fit-in/1280x720/common/templates/default/courses/course10.png")!)
+                self.posterImg.load(url: URL(string: setting.posterImage!)!)
             }
         } else {
             self.posterImg.removeFromSuperview()

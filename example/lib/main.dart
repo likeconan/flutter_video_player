@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:video_player_oneplusdream/video_player.widget.dart';
-import 'package:video_player_oneplusdream/video_player_event.model.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
-import 'package:video_player_oneplusdream/video_player_setting.model.dart';
 
 void main() {
   runApp(const MyApp());
