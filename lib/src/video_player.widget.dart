@@ -1,102 +1,113 @@
-import 'dart:convert';
+part of video_player_oneplusdream;
 
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:video_player_oneplusdream/src/video_player_setting.model.dart';
-
-import '../video_player_oneplusdream.dart';
-
-class VideoPlayer extends StatefulWidget {
+class VideoPlayerOnePlusDream extends StatefulWidget {
+  /// if auto play at first
+  /// default is true
   final bool autoPlay;
-  final String? protectionText;
+
+  /// if enabled when taking screen capture
+  /// for ios the video will display a black cover with protectionText
+  /// for android the video is visible to see but the captured video will be black
+  /// default is false
   final bool enablePreventScreenCapture;
+
+  /// the protection text that you want to show in black cover
+  /// default is "In order to protect our digital content, please close record or share screen function"
+  final String? protectionText;
+
+  /// the content of marquee that displayed in video
   final String? marqueeText;
+
+  /// to enable marquee when playing video
+  /// default is false
   final bool enableMarquee;
-  final double? position;
+
+  /// playing items must be set and not empty
+  /// url is the video remote url
+  /// title is the title of video
+  /// position is the history
   final List<PlayingItem> playingItems;
+
+  /// set poster image url when you don't want to play video at first
   final String? posterImage;
+
+  /// if hide back back button at first
+  /// default is false
   final bool hideBackButton;
-  const VideoPlayer(
+
+  /// used when you want to attach controller and invoke some function by controller
+  final VideoCreatedCallback? onVideoCreated;
+
+  /// back icon clicked when it's not in full screen mode
+  final VoidCallback? onBack;
+
+  const VideoPlayerOnePlusDream(
     this.playingItems, {
     this.autoPlay = true,
     this.protectionText,
     this.enablePreventScreenCapture = false,
     this.marqueeText,
     this.enableMarquee = false,
-    this.position,
     this.posterImage,
     this.hideBackButton = false,
+    this.onVideoCreated,
+    this.onBack,
     Key? key,
   }) : super(key: key);
 
   @override
-  _VideoPlayerState createState() => _VideoPlayerState();
+  _VideoPlayerOnePlusDreamState createState() =>
+      _VideoPlayerOnePlusDreamState();
 }
 
-class _VideoPlayerState extends State<VideoPlayer> {
-  final _videoPlayerOneplusdreamPlugin = VideoPlayerOneplusdream();
+var _nextVideoPlayerCreationId = 0;
+
+class _VideoPlayerOnePlusDreamState extends State<VideoPlayerOnePlusDream> {
+  final int _videoId = _nextVideoPlayerCreationId++;
+  final Completer<VideoPlayerController> _controller =
+      Completer<VideoPlayerController>();
+
   @override
   void dispose() {
     super.dispose();
     try {
-      _videoPlayerOneplusdreamPlugin.release();
+      _disposeController();
     } catch (e) {
       print("release error $e");
     }
   }
 
+  Future<void> _disposeController() async {
+    final VideoPlayerController controller = await _controller.future;
+    controller.dispose();
+  }
+
+  Future<void> onPlatformViewCreated(int id) async {
+    final VideoPlayerController controller = await VideoPlayerController.init(
+      id,
+      this,
+    );
+    _controller.complete(controller);
+    if (widget.onVideoCreated != null) {
+      widget.onVideoCreated!(controller);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This is used in the platform side to register the view.
-    const String viewType = 'video_player';
-    // Pass parameters to the platform side.
-    var creationParams = {
-      "autoPlay": widget.autoPlay,
-      "protectionText": widget.protectionText,
-      "enablePreventScreenCapture": widget.enablePreventScreenCapture,
-      "marqueeText": widget.marqueeText,
-      "enableMarquee": widget.enableMarquee,
-      "position": widget.position,
-      "playingItems": widget.playingItems.map((e) => e.toJson()).toList(),
-      "posterImage": widget.posterImage,
-      "hideBackButton": widget.hideBackButton,
-    };
-    if (TargetPlatform.android == defaultTargetPlatform) {
-      return PlatformViewLink(
-        viewType: viewType,
-        surfaceFactory: (context, controller) {
-          return AndroidViewSurface(
-            controller: controller as AndroidViewController,
-            gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-          );
-        },
-        onCreatePlatformView: (params) {
-          return PlatformViewsService.initSurfaceAndroidView(
-            id: params.id,
-            viewType: viewType,
-            layoutDirection: TextDirection.ltr,
-            creationParams: creationParams,
-            creationParamsCodec: const StandardMessageCodec(),
-            onFocus: () {
-              params.onFocusChanged(true);
-            },
-          )
-            ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-            ..create();
-        },
-      );
-    } else if (TargetPlatform.iOS == defaultTargetPlatform) {
-      return UiKitView(
-        viewType: viewType,
-        creationParams: creationParams,
-        creationParamsCodec: StandardMessageCodec(),
-      );
-    } else {
-      return Text("$defaultTargetPlatform platform not supported yet");
-    }
+    return VideoPlayerOneplusdreamPlatform.instance.buildView(
+      _videoId,
+      onPlatformViewCreated,
+      params: {
+        "autoPlay": widget.autoPlay,
+        "protectionText": widget.protectionText,
+        "enablePreventScreenCapture": widget.enablePreventScreenCapture,
+        "marqueeText": widget.marqueeText,
+        "enableMarquee": widget.enableMarquee,
+        "playingItems": widget.playingItems.map((e) => e.toJson()).toList(),
+        "posterImage": widget.posterImage,
+        "hideBackButton": widget.hideBackButton,
+      },
+    );
   }
 }

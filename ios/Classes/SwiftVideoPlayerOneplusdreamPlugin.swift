@@ -9,8 +9,8 @@ public class SwiftVideoPlayerOneplusdreamPlugin: NSObject, FlutterPlugin {
         registrar.addMethodCallDelegate(instance, channel: channel)
         
         // view
-        let factory = VideoPlayerViewFactory(messenger: registrar.messenger(),channel: channel)
-        registrar.register(factory, withId: "video_player")
+        let factory = VideoPlayerViewFactory(registrar: registrar)
+        registrar.register(factory, withId: "oneplusdream/video_player_ios")
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

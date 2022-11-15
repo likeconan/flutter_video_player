@@ -6,8 +6,8 @@ import 'dart:html' as html show window;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import 'src/video_player_event.model.dart';
-import 'src/video_player_oneplusdream_platform_interface.dart';
+import 'video_player_oneplusdream.dart';
+import 'video_player_oneplusdream_platform_interface.dart';
 
 /// A web implementation of the VideoPlayerOneplusdreamPlatform of the VideoPlayerOneplusdream plugin.
 class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {

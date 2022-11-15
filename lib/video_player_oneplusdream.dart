@@ -1,21 +1,16 @@
-import './src/video_player_event.model.dart';
-import './src/video_player_oneplusdream_platform_interface.dart';
+library video_player_oneplusdream;
 
-export 'src/video_player.widget.dart';
-export 'src/video_player_event.constant.dart';
-export 'src/video_player_event.model.dart';
-export 'src/video_player_setting.model.dart';
+import 'dart:async';
+import 'dart:convert';
 
-class VideoPlayerOneplusdream {
-  void setOnBackClicked(Future<dynamic> Function() handler) {
-    VideoPlayerOneplusdreamPlatform.instance.setOnBackClicked(handler);
-  }
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import '../video_player_oneplusdream_platform_interface.dart';
 
-  Future toggleFullScreen(ToggleFullScreenParam param) {
-    return VideoPlayerOneplusdreamPlatform.instance.toggleFullScreen(param);
-  }
-
-  Future release() {
-    return VideoPlayerOneplusdreamPlatform.instance.release();
-  }
-}
+part 'src/controller.dart';
+part 'src/video_player.widget.dart';
+part 'src/video_player_setting.model.dart';
+part 'src/video_player_event.model.dart';

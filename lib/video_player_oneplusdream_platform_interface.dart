@@ -1,8 +1,10 @@
 import 'dart:ffi';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'video_player_event.model.dart';
+import 'video_player_oneplusdream.dart';
 import 'video_player_oneplusdream_method_channel.dart';
 
 abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
@@ -27,26 +29,33 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  List<Future<dynamic> Function()> onBackClickedFuncList =
-      List.empty(growable: true);
+  /// This method is called when the plugin is first initialized.
+  Future<void> init(int videoId) {
+    throw UnimplementedError('init() has not been implemented.');
+  }
 
   Future toggleFullScreen(ToggleFullScreenParam param) {
     throw UnimplementedError('toggleFullScreen() has not been implemented.');
+  }
+
+  Stream<BackEvent> onBack({required int videoId}) {
+    throw UnimplementedError('onBack() has not been implemented.');
   }
 
   Future release() {
     throw UnimplementedError('release() has not been implemented.');
   }
 
-  void setOnBackClicked(Future<dynamic> Function() onBackClicked) {
-    onBackClickedFuncList.add(onBackClicked);
+  Widget buildView(
+    int creationId,
+    PlatformViewCreatedCallback onPlatformViewCreated, {
+    Map<String, dynamic> params = const <String, dynamic>{},
+  }) {
+    throw UnimplementedError('buildView() has not been implemented.');
   }
 
-  bool removeOnBackClicked(Future<dynamic> Function() onBackClicked) {
-    return onBackClickedFuncList.remove(onBackClicked);
-  }
-
-  void clearOnBackClicked() {
-    onBackClickedFuncList.clear();
+  /// Dispose of whatever resources the `videoId` is holding on to.
+  void dispose({required int videoId}) {
+    throw UnimplementedError('dispose() has not been implemented.');
   }
 }

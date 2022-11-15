@@ -29,7 +29,6 @@ struct PlayerSetting {
     let enablePreventScreenCapture: Bool
     let marqueeText: String?
     let enableMarquee: Bool
-    let poisition: Double?
     let playingItems: [PlayingItem]
     let lastPlayMessage: String?
     let posterImage: String?
@@ -39,6 +38,7 @@ struct PlayerSetting {
 struct PlayingItem {
     let url: String
     let title: String?
+    let position: Double?
 }
 
 enum ToastType {

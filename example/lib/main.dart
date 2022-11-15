@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
 
 void main() {
@@ -17,15 +14,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _videoPlayerOneplusdreamPlugin = VideoPlayerOneplusdream();
+  late final VideoPlayerController controller1;
+  late final VideoPlayerController controller2;
 
   @override
   void initState() {
     super.initState();
-    _videoPlayerOneplusdreamPlugin.setOnBackClicked(() async {
-      _videoPlayerOneplusdreamPlugin.release();
-      // return "";
-    });
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -44,7 +38,26 @@ class _MyAppState extends State<MyApp> {
                 Text("hello world"),
                 SizedBox(
                   height: 200,
-                  child: VideoPlayer(
+                  child: VideoPlayerOnePlusDream([
+                    PlayingItem(
+                        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                        title: "Rabbit"),
+                    PlayingItem(
+                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+                        title: "BigBop"),
+                  ],
+                      enableMarquee: true,
+                      enablePreventScreenCapture: true,
+                      marqueeText: "Hello",
+                      autoPlay: false,
+                      onBack: () => print("onBack1"),
+                      onVideoCreated: ((controller) =>
+                          controller1 = controller)),
+                ),
+                Text("Second"),
+                SizedBox(
+                  height: 300,
+                  child: VideoPlayerOnePlusDream(
                     [
                       PlayingItem(
                           "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
@@ -55,14 +68,16 @@ class _MyAppState extends State<MyApp> {
                     ],
                     enableMarquee: true,
                     enablePreventScreenCapture: true,
-                    marqueeText: "Hello",
+                    marqueeText: "What",
                     autoPlay: false,
+                    onBack: () => print("onBack2"),
+                    onVideoCreated: ((controller) => controller2 = controller),
                   ),
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      _videoPlayerOneplusdreamPlugin
-                          .toggleFullScreen(ToggleFullScreenParam());
+                      // _videoPlayerOneplusdreamPlugin
+                      //     .toggleFullScreen(ToggleFullScreenParam());
                     },
                     child: Text("open full screen"))
               ],

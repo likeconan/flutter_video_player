@@ -11,11 +11,10 @@ import SnapKit
 import ToastViewSwift
 
 class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
-    private var messenger: FlutterBinaryMessenger
-    private var channel: FlutterMethodChannel
-    init(messenger: FlutterBinaryMessenger, channel:FlutterMethodChannel) {
-        self.messenger = messenger
-        self.channel = channel
+    private var registrar: FlutterPluginRegistrar
+    
+    init(registrar: FlutterPluginRegistrar) {
+        self.registrar = registrar
         super.init()
     }
     
@@ -32,13 +31,12 @@ class VideoPlayerViewFactory: NSObject, FlutterPlatformViewFactory {
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
-            binaryMessenger: messenger,
-            channel: self.channel)
+            registrar: registrar)
     }
 }
 
 class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
-
+    
     
     private var _view: UIView
     private var _playerContainer: UIView;
@@ -49,12 +47,15 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?,
-        binaryMessenger messenger: FlutterBinaryMessenger?,
-        channel: FlutterMethodChannel
+        registrar registrar: FlutterPluginRegistrar
     ) {
+        print("viewId: \(viewId)")
+        _channle = FlutterMethodChannel(name: "oneplusdream/video_channel_\(viewId)", binaryMessenger: registrar.messenger())
+        let instance = SwiftVideoPlayerOneplusdreamPlugin()
+        registrar.addMethodCallDelegate(instance,channel:_channle)
+        
         _view = UIView()
         _playerContainer = UIView();
-        _channle = channel;
         super.init()
         // iOS views can be created here
         createNativeView(view: _view, arguments: args);
@@ -74,7 +75,7 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             } else if (call.method == "play") {
                 if let args = call.arguments as? Dictionary<String, Any>,
                    let url = args["url"] as? String{
-                    let item = PlayingItem(url:url, title: args["title"] as? String)
+                    let item = PlayingItem(url:url, title: args["title"] as? String, position: args["position"] as? Double)
                     self.playerView?.play(with: item)
                     result(nil)
                 } else {
@@ -83,8 +84,9 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             } else if (call.method == "release") {
                 self.playerView?.release()
                 result(nil)
-            }
-            else {
+            } else if(call.method == "ready") {
+                result(nil)
+            } else {
                 result(FlutterError.init(code: "noMethodFound", message: "no related method found" + call.method, details: nil))
             }
         }
@@ -115,14 +117,13 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         let protectionText = args["protectionText"] as? String
         let marqueeText = args["marqueeText"] as? String
         let lastPlayMessage = args["lastPlayMessage"] as? String
-        let position = args["position"] as? Double
         let posterImage = args["posterImg"] as? String
         let hideBackButton = args["hideBackButton"] as? Bool
         var playingItems = [PlayingItem]()
         for item in items {
-            playingItems.append(PlayingItem(url: item["url"] as! String, title: item["title"] as? String))
+            playingItems.append(PlayingItem(url: item["url"] as! String, title: item["title"] as? String,position: item["position"] as? Double))
         }
-        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, poisition: position, playingItems: playingItems, lastPlayMessage: lastPlayMessage, posterImage: posterImage, hideBackButton: hideBackButton ?? false)
+        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, playingItems: playingItems, lastPlayMessage: lastPlayMessage, posterImage: posterImage, hideBackButton: hideBackButton ?? false)
         playerView = PlayerView(containerView: _view,setting: param)
         _view.addSubview(playerView!)
         playerView?.snp.makeConstraints { (make) -> Void in
@@ -142,7 +143,6 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
     
     @objc func appWillEnterForegroundNotification() {
         self.playerView?.activityIndicator.startAnimating()
-        print(self.playerView?.player?.timeControlStatus.rawValue)
         if(self.playerView?.player?.timeControlStatus == .waitingToPlayAtSpecifiedRate){
             print("resume to play")
             self.playerView?.resume()
