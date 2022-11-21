@@ -156,6 +156,19 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         self._channle.invokeMethod("onBack", arguments: nil)
     }
     
+    func onPlaying(event:PlayingEvent) {
+        do {
+            let jsonData = try event.jsonData()
+            let json = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            guard let dictionary = json as? [String : Any] else {
+                return
+            }
+            self._channle.invokeMethod("onPlaying", arguments: dictionary)
+        } catch {
+            print(error)
+        }
+    }
+    
     func onRateChange(rate: Float) {
         self._channle.invokeMethod("onRateChange", arguments: rate)
     }

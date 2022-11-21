@@ -40,6 +40,7 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
 
   /// back icon clicked when it's not in full screen mode
   final VoidCallback? onBack;
+  final OnPlayingCallback? onPlaying;
 
   const VideoPlayerOnePlusDream(
     this.playingItems, {
@@ -52,6 +53,7 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
     this.hideBackButton = false,
     this.onVideoCreated,
     this.onBack,
+    this.onPlaying,
     Key? key,
   }) : super(key: key);
 

@@ -20,7 +20,7 @@ class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
 
   /// Returns a [String] containing the version of the platform.
   @override
-  Future toggleFullScreen(ToggleFullScreenParam param) async {
+  Future toggleFullScreen(int videoId, ToggleFullScreenParam param) async {
     // todo
   }
 }

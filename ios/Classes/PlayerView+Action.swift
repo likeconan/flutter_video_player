@@ -107,6 +107,7 @@ extension PlayerView {
                 toggleControl();
                 errorMessage.isHidden = true
                 playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
+                self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[getCurrentPlayIndex()!], status: PlayingStatus.start));
             case .failed:
                 errorMessage.text = "Player failed to play."
                 errorMessage.isHidden = false
@@ -125,6 +126,7 @@ extension PlayerView {
         if(ind < setting.playingItems.count - 1) {
             self.currentTime = 0
             self.play(with: setting.playingItems[ind+1])
+            self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[ind+1], status: PlayingStatus.start));
         }else {
             self.delegate?.showToast(message:setting.lastPlayMessage ?? "This is the last one for play.", type: ToastType.info)
         }
@@ -346,6 +348,7 @@ extension PlayerView {
     }
     
     @objc func playerDidFinishPlaying(sender: Notification) {
+        self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[getCurrentPlayIndex()!], status: PlayingStatus.end));
         playNext()
     }
     

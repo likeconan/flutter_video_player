@@ -34,7 +34,7 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     throw UnimplementedError('init() has not been implemented.');
   }
 
-  Future toggleFullScreen(ToggleFullScreenParam param) {
+  Future toggleFullScreen(int videoId, ToggleFullScreenParam param) {
     throw UnimplementedError('toggleFullScreen() has not been implemented.');
   }
 
@@ -42,8 +42,16 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     throw UnimplementedError('onBack() has not been implemented.');
   }
 
+  Stream<PlayingEvent> onPlaying({required int videoId}) {
+    throw UnimplementedError('onPlaying() has not been implemented.');
+  }
+
   Future release() {
     throw UnimplementedError('release() has not been implemented.');
+  }
+
+  Future play(int videoId, PlayingItem item) {
+    throw UnimplementedError('play() has not been implemented.');
   }
 
   Widget buildView(

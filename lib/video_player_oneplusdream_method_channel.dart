@@ -29,8 +29,6 @@ class MethodChannelVideoPlayerOneplusdream
 
   @visibleForTesting
   MethodChannel ensureChannelInitialized(int id) {
-    print("channel init with id: $id");
-    print("channel count: ${_channels.length}");
     MethodChannel? channel = _channels[id];
     if (channel == null) {
       channel = MethodChannel('oneplusdream/video_channel_$id');
@@ -42,9 +40,22 @@ class MethodChannelVideoPlayerOneplusdream
   }
 
   @override
-  Future<void> init(int id) {
-    final MethodChannel channel = ensureChannelInitialized(id);
+  Future<void> init(int videoId) {
+    final MethodChannel channel = ensureChannelInitialized(videoId);
     return channel.invokeMethod<void>('ready');
+  }
+
+  @override
+  Future<void> toggleFullScreen(int videoId, ToggleFullScreenParam param) {
+    final MethodChannel channel = ensureChannelInitialized(videoId);
+    return channel.invokeMethod<void>(
+        'toggleFullScreen', {"isFullScreen": param.isFullScreen});
+  }
+
+  @override
+  Future<void> play(int videoId, PlayingItem item) {
+    final MethodChannel channel = ensureChannelInitialized(videoId);
+    return channel.invokeMethod<void>('play', item.toJson());
   }
 
   @override
@@ -53,12 +64,20 @@ class MethodChannelVideoPlayerOneplusdream
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call, int id) async {
-    switch (call.method) {
-      case ON_BACK_CLICKED:
-        _videoEventStreamController.add(BackEvent(id));
-        break;
-      default:
-        throw MissingPluginException();
+    try {
+      switch (call.method) {
+        case ON_BACK_CLICKED:
+          _videoEventStreamController.add(BackEvent(id));
+          break;
+        case ON_PLAYING:
+          _videoEventStreamController.add(
+              PlayingEvent(id, PlayingEventDetail.fromJson(call.arguments)));
+          break;
+        default:
+          throw MissingPluginException();
+      }
+    } catch (e) {
+      print("event error: $e");
     }
   }
 
@@ -72,6 +91,11 @@ class MethodChannelVideoPlayerOneplusdream
   @override
   Stream<BackEvent> onBack({required int videoId}) {
     return _events(videoId).whereType<BackEvent>();
+  }
+
+  @override
+  Stream<PlayingEvent> onPlaying({required int videoId}) {
+    return _events(videoId).whereType<PlayingEvent>();
   }
 
   @override

@@ -55,15 +55,18 @@ extension PlayerView {
         if(self.player?.timeControlStatus == nil) {
             self.play(with: setting.playingItems[(getCurrentPlayIndex() ?? 0)])
             playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
+            self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[getCurrentPlayIndex()!], status: PlayingStatus.play));
             return;
         }
         if(self.player?.timeControlStatus == .paused){
             self.player?.play();
             playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
+            self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[getCurrentPlayIndex()!], status: PlayingStatus.play));
         } else {
             self.player?.pause();
             playIcon.setAllStateImage(MediaResource.shared.getImage(name: "play"))
             self.hideControlWork?.cancel()
+            self.delegate?.onPlaying(event: PlayingEvent(item: setting.playingItems[getCurrentPlayIndex()!], status: PlayingStatus.pause));
         }
     }
     

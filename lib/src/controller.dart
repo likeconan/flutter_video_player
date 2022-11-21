@@ -1,6 +1,7 @@
 part of video_player_oneplusdream;
 
 typedef VideoCreatedCallback = void Function(VideoPlayerController controller);
+typedef OnPlayingCallback = void Function(PlayingEventDetail event);
 typedef BackCallback = void Function();
 
 class VideoPlayerController {
@@ -38,6 +39,20 @@ class VideoPlayerController {
           .onBack(videoId: videoId)
           .listen((_) => _videoPlayerState.widget.onBack!());
     }
+    if (_videoPlayerState.widget.onPlaying != null) {
+      VideoPlayerOneplusdreamPlatform.instance
+          .onPlaying(videoId: videoId)
+          .listen((e) => _videoPlayerState.widget.onPlaying!(e.value));
+    }
+  }
+
+  Future<void> play(PlayingItem item) {
+    return VideoPlayerOneplusdreamPlatform.instance.play(videoId, item);
+  }
+
+  Future<void> toggleFullScreen(ToggleFullScreenParam param) {
+    return VideoPlayerOneplusdreamPlatform.instance
+        .toggleFullScreen(videoId, param);
   }
 
   /// Disposes of the platform resources

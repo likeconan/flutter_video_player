@@ -35,10 +35,23 @@ struct PlayerSetting {
     let hideBackButton: Bool
 }
 
-struct PlayingItem {
+struct PlayingItem: Encodable {
     let url: String
     let title: String?
     let position: Double?
+}
+
+struct PlayingEvent: Encodable {
+    let item: PlayingItem
+    let status:PlayingStatus
+}
+
+enum PlayingStatus: Int, Encodable {
+    case start = 0
+    case pause = 1
+    case play = 2
+    case end = 3
+    case error = 4
 }
 
 enum ToastType {
@@ -201,5 +214,16 @@ extension UIButton {
         self.setImage(img,for: .normal)
         self.setImage(img,for: .highlighted)
         self.setImage(img,for: .focused)
+    }
+}
+
+extension Encodable {
+
+    /// Encode into JSON and return `Data`
+    func jsonData() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        encoder.dateEncodingStrategy = .iso8601
+        return try encoder.encode(self)
     }
 }
