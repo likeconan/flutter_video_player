@@ -14,8 +14,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  late final VideoPlayerController controller1;
-  late final VideoPlayerController controller2;
+  VideoPlayerController? controller1;
+  VideoPlayerController? controller2;
 
   @override
   void initState() {
@@ -33,32 +33,13 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: SafeArea(
-            child: Column(
-              children: [
-                Text("hello world"),
-                SizedBox(
-                  height: 200,
-                  child: VideoPlayerOnePlusDream([
-                    PlayingItem(
-                        "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-                        title: "Rabbit"),
-                    PlayingItem(
-                        "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
-                        title: "BigBop"),
-                  ],
-                      enableMarquee: true,
-                      enablePreventScreenCapture: true,
-                      marqueeText: "Hello",
-                      autoPlay: false,
-                      onBack: () => print("onBack1"),
-                      onVideoCreated: ((controller) =>
-                          controller1 = controller)),
-                ),
-                Text("Second"),
-                SizedBox(
-                  height: 300,
-                  child: VideoPlayerOnePlusDream(
-                    [
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Text("hello world"),
+                  SizedBox(
+                    height: 200,
+                    child: VideoPlayerOnePlusDream([
                       PlayingItem(
                           "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
                           title: "Rabbit"),
@@ -66,21 +47,50 @@ class _MyAppState extends State<MyApp> {
                           "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
                           title: "BigBop"),
                     ],
-                    enableMarquee: true,
-                    enablePreventScreenCapture: true,
-                    marqueeText: "What",
-                    autoPlay: false,
-                    onBack: () => print("onBack2"),
-                    onVideoCreated: ((controller) => controller2 = controller),
+                        enableMarquee: true,
+                        enablePreventScreenCapture: true,
+                        marqueeText: "Hello",
+                        autoPlay: false,
+                        onBack: () => print("onBack1"),
+                        onVideoCreated: ((controller) =>
+                            controller1 = controller)),
                   ),
-                ),
-                ElevatedButton(
-                    onPressed: () {
-                      // _videoPlayerOneplusdreamPlugin
-                      //     .toggleFullScreen(ToggleFullScreenParam());
-                    },
-                    child: Text("open full screen"))
-              ],
+                  Text("Second"),
+                  SizedBox(
+                    height: 300,
+                    child: VideoPlayerOnePlusDream(
+                      [
+                        PlayingItem(
+                            "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                            title: "Rabbit"),
+                        PlayingItem(
+                            "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+                            title: "BigBop"),
+                      ],
+                      enableMarquee: true,
+                      enablePreventScreenCapture: true,
+                      marqueeText: "What",
+                      autoPlay: false,
+                      onBack: () => print("onBack2"),
+                      onVideoCreated: ((controller) =>
+                          controller2 = controller),
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        controller1?.toggleFullScreen(
+                            ToggleFullScreenParam(isFullScreen: true));
+                      },
+                      child: Text("open full screen")),
+                  ElevatedButton(
+                      onPressed: () {
+                        controller1?.play(PlayingItem(
+                            "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
+                            title: "Hello world"));
+                      },
+                      child: Text("play another item"))
+                ],
+              ),
             ),
           ),
         ),
