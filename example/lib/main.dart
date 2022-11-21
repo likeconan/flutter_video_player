@@ -52,6 +52,9 @@ class _MyAppState extends State<MyApp> {
                         marqueeText: "Hello",
                         autoPlay: false,
                         onBack: () => print("onBack1"),
+                        onPlaying: (event) {
+                          print("onPlaying event happened $event");
+                        },
                         onVideoCreated: ((controller) =>
                             controller1 = controller)),
                   ),
@@ -72,6 +75,10 @@ class _MyAppState extends State<MyApp> {
                       marqueeText: "What",
                       autoPlay: false,
                       onBack: () => print("onBack2"),
+                      onPlaying: (event) {
+                        print("onPlyaing happened");
+                        print(event);
+                      },
                       onVideoCreated: ((controller) =>
                           controller2 = controller),
                     ),
