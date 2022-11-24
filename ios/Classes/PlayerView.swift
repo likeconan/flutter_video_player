@@ -32,8 +32,9 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         setupPictureInPicture();
         setupUI();
         toggleNetwork();
+        backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchDown)
         if(setting.playingItems.count == 0) {
-            self.delegate?.showToast(message:"No available playing items", type: ToastType.warning)
+            self.errorMessage.text = "No available playing items";
             return;
         }
         NotificationCenter.default.addObserver(self, selector: #selector(self.playerDidFinishPlaying(sender:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)

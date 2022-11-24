@@ -46,12 +46,16 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
     throw UnimplementedError('onPlaying() has not been implemented.');
   }
 
-  Future release() {
-    throw UnimplementedError('release() has not been implemented.');
-  }
-
   Future play(int videoId, PlayingItem item) {
     throw UnimplementedError('play() has not been implemented.');
+  }
+
+  Future togglePause(int videoId, bool isPause) {
+    throw UnimplementedError('pause() has not been implemented.');
+  }
+
+  Future dispose({required int videoId}) {
+    throw UnimplementedError('dispose() has not been implemented.');
   }
 
   Widget buildView(
@@ -63,7 +67,5 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
   }
 
   /// Dispose of whatever resources the `videoId` is holding on to.
-  void dispose({required int videoId}) {
-    throw UnimplementedError('dispose() has not been implemented.');
-  }
+
 }

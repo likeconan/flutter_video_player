@@ -59,8 +59,16 @@ class MethodChannelVideoPlayerOneplusdream
   }
 
   @override
-  void dispose({required int videoId}) {
-    // Noop!
+  Future<void> togglePause(int videoId, bool isPause) {
+    final MethodChannel channel = ensureChannelInitialized(videoId);
+    print('called $isPause');
+    return channel.invokeMethod<void>('togglePause', isPause);
+  }
+
+  @override
+  Future<void> dispose({required int videoId}) {
+    final MethodChannel channel = ensureChannelInitialized(videoId);
+    return channel.invokeMethod<void>('release');
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call, int id) async {

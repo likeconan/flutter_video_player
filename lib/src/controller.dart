@@ -55,6 +55,11 @@ class VideoPlayerController {
         .toggleFullScreen(videoId, param);
   }
 
+  Future<void> togglePause(bool isPause) {
+    return VideoPlayerOneplusdreamPlatform.instance
+        .togglePause(videoId, isPause);
+  }
+
   /// Disposes of the platform resources
   void dispose() {
     VideoPlayerOneplusdreamPlatform.instance.dispose(videoId: videoId);

@@ -71,12 +71,22 @@ class _VideoPlayerOnePlusDreamState extends State<VideoPlayerOnePlusDream> {
 
   @override
   void dispose() {
-    super.dispose();
     try {
       _disposeController();
     } catch (e) {
       print("release error $e");
     }
+    super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    try {
+      _disposeController();
+    } catch (e) {
+      print("release error $e");
+    }
+    super.deactivate();
   }
 
   Future<void> _disposeController() async {

@@ -81,6 +81,14 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
                 } else {
                     result(FlutterError.init(code: "errorSetParameter", message: "data or format error", details: nil))
                 }
+            } else if (call.method == "togglePause") {
+                let args = call.arguments as? Bool
+                if(args ?? false) {
+                    self.playerView?.player?.pause()
+                }else {
+                    self.playerView?.player?.play()
+                }
+                result(nil)
             } else if (call.method == "release") {
                 self.playerView?.release()
                 result(nil)
