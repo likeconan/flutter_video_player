@@ -1,13 +1,8 @@
 library video_player_oneplusdream;
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import '../video_player_oneplusdream_platform_interface.dart';
 
 part 'src/controller.dart';

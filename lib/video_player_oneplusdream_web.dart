@@ -4,6 +4,8 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html show window;
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'video_player_oneplusdream.dart';
@@ -22,5 +24,17 @@ class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
   @override
   Future toggleFullScreen(int videoId, ToggleFullScreenParam param) async {
     // todo
+  }
+
+  @override
+  Widget buildView(
+    int creationId,
+    PlatformViewCreatedCallback onPlatformViewCreated, {
+    Map<String, dynamic> params = const <String, dynamic>{},
+  }) {
+    return Container(
+      color: Colors.grey[300],
+      child: Center(child: Text("Not implemented yet")),
+    );
   }
 }
