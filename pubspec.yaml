@@ -1,6 +1,6 @@
 name: video_player_oneplusdream
 description: this plugin used for video player in ios, android, web with many functions.
-version: 0.0.1
+version: 1.0.0+1
 homepage: https://github.com/likeconan/flutter_video_player
 
 environment:
@@ -13,6 +13,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  rxdart: ^0.27.6
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,9 @@ flutter:
       web:
         pluginClass: VideoPlayerOneplusdreamWeb
         fileName: video_player_oneplusdream_web.dart
+  
+  assets:
+    - lib/assets/
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
