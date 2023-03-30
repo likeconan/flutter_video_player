@@ -147,7 +147,7 @@ Most of useful functions are integrated inside native, so it's easy for you to u
 
 ### APIs
 
-#### VideoPlayerOnePlusDream Widget Parameters
+> VideoPlayerOnePlusDream Widget Parameters
 
 **PlayingItem** required
 
@@ -205,7 +205,7 @@ When the hide back button is clicked in not full screen mode, the onBack functio
 
 When player different playing status changes, the function is called with *PlayingEventDetail* parameter, like start, pause, play, end, error, release.
 
-#### VideoPlayerController
+> VideoPlayerController
 
 A controller that you can handle player event in flutter side.
 
@@ -221,7 +221,7 @@ Pass true or false to pause or play the player
 
 Pass true or false to enter or exit full screen mode
 
-#### PlayingEventDetail
+> PlayingEventDetail
 
 |                        | Type         | Required | Comment   |
 |------------------------|--------------|----------|-|
