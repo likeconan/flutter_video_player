@@ -115,7 +115,7 @@ class CachePage extends StatelessWidget {
                 },
               ),
               TextButton(
-                child: Text("Precache current video"),
+                child: Text("Precache video"),
                 onPressed: () {
                   debugPrint('Precaching video');
                   //controller?.preCache(videoSource);
