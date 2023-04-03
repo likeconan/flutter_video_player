@@ -1,5 +1,8 @@
 PODS:
   - Flutter (1.0.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - SnapKit (5.6.0)
   - ToastViewSwift (1.1.0)
   - video_player_oneplusdream (0.0.1):
@@ -9,6 +12,7 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - video_player_oneplusdream (from `.symlinks/plugins/video_player_oneplusdream/ios`)
 
 SPEC REPOS:
@@ -19,15 +23,18 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
   video_player_oneplusdream:
     :path: ".symlinks/plugins/video_player_oneplusdream/ios"
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
   ToastViewSwift: 8fc7b518fdd834daf4b8009d09435a3fb1d8df46
   video_player_oneplusdream: 079bc5701cae9ab23449c7f3d616383e3349dd95
 
 PODFILE CHECKSUM: cc1f88378b4bfcf93a6ce00d2c587857c6008d3b
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.11.2

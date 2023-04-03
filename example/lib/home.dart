@@ -58,7 +58,7 @@ class HomeRoute extends StatelessWidget {
                     controller?.togglePause(true);
                     await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => CacheRoute()),
+                      MaterialPageRoute(builder: (_) => CachePage()),
                     );
                     await controller?.togglePause(false);
                   },

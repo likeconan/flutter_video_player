@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player_oneplusdream_example/cache.dart';
 import 'package:video_player_oneplusdream_example/home.dart';
 
 void main() {
@@ -21,7 +22,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomeRoute(),
+      home: CachePage(),
     );
   }
 }
