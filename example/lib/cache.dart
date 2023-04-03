@@ -5,17 +5,25 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
-class CachePage extends StatelessWidget {
-  VideoPlayerController? controller;
-  CachePage({super.key});
+class CachePage extends StatefulWidget {
+  @override
+  _CachePageState createState() => _CachePageState();
+}
 
-  //Same demo videos
-  String url1 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/2.mp4';
-  String url2 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/3.mp4';
-  String url3 = 'https://d305e11xqcgjdr.cloudfront.net/stories/4cf90380-e814-4f74-aac0-250a7b2cbaac/4.mp4';
-  String url4 = 'https://d305e11xqcgjdr.cloudfront.net/stories/61cc00f1-6e16-4015-b92d-e34e55e28742/13.mp4';
+  class _CachePageState extends State<CachePage> {
+
+    VideoPlayerController? controller;
+    //Same demo videos
+    String url1 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/2.mp4';
+    String url2 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/3.mp4';
+    String url3 = 'https://d305e11xqcgjdr.cloudfront.net/stories/4cf90380-e814-4f74-aac0-250a7b2cbaac/4.mp4';
+    String url4 = 'https://d305e11xqcgjdr.cloudfront.net/stories/61cc00f1-6e16-4015-b92d-e34e55e28742/13.mp4';
 
 
+  @override
+  void initState() {
+   // controller = VideoPlayerController(VideoPlayerConfiguration);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +73,7 @@ class CachePage extends StatelessWidget {
                 child: Text("Play video1"),
                 onPressed: () {
                   debugPrint('Playing video 1');
-                  controller?.play( PlayingItem(
+                  controller!.play( PlayingItem(
                     id: '1',
                     url: url1,
                     aspectRatio: 16 / 9,
@@ -77,7 +85,7 @@ class CachePage extends StatelessWidget {
                 child: Text("Play video2"),
                 onPressed: () {
                   debugPrint('Playing video 2');
-                  controller?.play( PlayingItem(
+                  controller!.play( PlayingItem(
                     id: '2',
                     url: url2,
                     aspectRatio: 16 / 9,
@@ -98,7 +106,7 @@ class CachePage extends StatelessWidget {
                   String url3 = '${appStorageDir.path}/3.mp4';
                   bool fileExists = await checkFile(url3);
                   if (fileExists){
-                    controller?.play( PlayingItem(
+                    controller!.play( PlayingItem(
                       id: '2',
                       url: url3,
                       aspectRatio: 16 / 9,
@@ -111,14 +119,14 @@ class CachePage extends StatelessWidget {
                 child: Text("Pause video"),
                 onPressed: () {
                   debugPrint('Pausing video');
-                  controller?.togglePause(true);
+                  controller!.togglePause(true);
                 },
               ),
               TextButton(
                 child: Text("Precache video"),
                 onPressed: () {
                   debugPrint('Precaching video');
-                  //controller?.preCache(videoSource);
+                  //controller!.preCache(videoSource);
                 },
               ),
 
@@ -132,8 +140,7 @@ class CachePage extends StatelessWidget {
           )),
     );
   }
-
-
+}
 
   void downloadfile() async {
     // final tempDir = await getTemporaryDirectory();
@@ -166,6 +173,3 @@ class CachePage extends StatelessWidget {
     }
   }
 
-
-
-}
