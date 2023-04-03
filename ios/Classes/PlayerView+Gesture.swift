@@ -96,6 +96,9 @@ extension PlayerView {
     }
     
     @objc func toggleControl() {
+        if(setting.hideControls) {
+            return;
+        }
         self.videoControllContainer.isHidden = false
         toggleTimeLabel()
         toggleNetwork()

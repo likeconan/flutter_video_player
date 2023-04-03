@@ -34,6 +34,7 @@ struct PlayerSetting {
     let posterImage: String?
     let hideBackButton: Bool
     let initialPlayIndex: Int
+    let hideControls: Bool
 }
 
 struct PlayingItem: Encodable {
@@ -42,7 +43,8 @@ struct PlayingItem: Encodable {
     let title: String?
     let position: Double?
     let extra: String?
-    
+    let aspectRatio: Double?
+    let fitMode: FitMode
 }
 
 struct PlayingEvent: Encodable {
@@ -58,6 +60,11 @@ enum PlayingStatus: Int, Encodable {
     case end = 3
     case error = 4
     case release = 5
+}
+
+enum FitMode: Int, Encodable {
+    case contain = 0
+    case cover = 1
 }
 
 enum ToastType {

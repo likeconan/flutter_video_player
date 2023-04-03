@@ -26,6 +26,9 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
   /// url is the video remote url
   /// title is the title of video
   /// position is the history
+  /// extra is what you defined for further use
+  /// aspectRatio is the ratio you want how video looks
+  /// fitMode shows how the player fit in the view, it contains contain and cover
   final List<PlayingItem> playingItems;
 
   /// initial playing index, default value is 0
@@ -38,6 +41,10 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
   /// default is false
   final bool hideBackButton;
 
+  /// if hide controls always
+  /// default is false
+  final bool hideControls;
+
   /// used when you want to attach controller and invoke some function by controller
   final VideoCreatedCallback? onVideoCreated;
 
@@ -46,6 +53,9 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
 
   /// onPlaying event
   final OnPlayingCallback? onPlaying;
+
+  /// set the message when the last of the playing items is finished
+  final String? lastPlayMessage;
 
   const VideoPlayerOnePlusDream(
     this.playingItems, {
@@ -60,6 +70,8 @@ class VideoPlayerOnePlusDream extends StatefulWidget {
     this.onVideoCreated,
     this.onBack,
     this.onPlaying,
+    this.lastPlayMessage,
+    this.hideControls = false,
     Key? key,
   }) : super(key: key);
 
@@ -126,6 +138,8 @@ class _VideoPlayerOnePlusDreamState extends State<VideoPlayerOnePlusDream> {
         "initialPlayIndex": widget.initialPlayIndex,
         "posterImage": widget.posterImage,
         "hideBackButton": widget.hideBackButton,
+        "lastPlayingMessage": widget.lastPlayMessage,
+        "hideControls": widget.hideControls,
       },
     );
   }

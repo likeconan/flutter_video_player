@@ -21,7 +21,7 @@ extension PlayerView {
         }
         self.posterImg.removeFromSuperview()
         self.posterBackIcon.removeFromSuperview()
-        self.videoControllContainer.isHidden = false
+        self.videoControllContainer.isHidden = setting.hideControls
         if let text = setting.marqueeText,
            setting.enableMarquee {
             startMarquee(text)
@@ -51,6 +51,7 @@ extension PlayerView {
         unbindGestures()
         marqueeLabel.layer.removeAllAnimations()
         marqueeLabel.removeFromSuperview()
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
@@ -109,10 +110,12 @@ extension PlayerView {
             switch status {
             case .readyToPlay:
                 onPlayingEvent(status: PlayingStatus.start);
-                self.onProgress()
-                player?.play()
+                let item = setting.playingItems[getCurrentPlayIndex()];
+                playerLayer.videoGravity = item.fitMode == FitMode.contain ? AVLayerVideoGravity.resizeAspect : AVLayerVideoGravity.resizeAspectFill;
+                self.onProgress();
+                player?.play();
                 toggleControl();
-                errorMessage.isHidden = true
+                errorMessage.isHidden = true;
                 playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
             case .failed:
                 errorMessage.text = "Player failed to play."
@@ -132,8 +135,6 @@ extension PlayerView {
         if(ind < setting.playingItems.count - 1) {
             self.play(with: setting.playingItems[ind+1])
             onPlayingEvent(status: PlayingStatus.start);
-        }else {
-            self.delegate?.showToast(message:setting.lastPlayMessage ?? "This is the last one for play.", type: ToastType.info)
         }
     }
     
@@ -155,7 +156,6 @@ extension PlayerView {
     }
     
     @objc func onVideoSliderValChanged(slider: UISlider, event: UIEvent) {
-        print("value changed")
         if let touchEvent = event.allTouches?.first {
             print(touchEvent.phase.rawValue)
             switch touchEvent.phase {
@@ -229,7 +229,7 @@ extension PlayerView {
             keyWindow = UIApplication.shared.keyWindow
         }
         if(keyWindow == nil) {
-            self.delegate?.showToast(message:setting.lastPlayMessage ?? "Cannot find root window.", type: ToastType.error)
+            self.delegate?.showToast(message: "Cannot find root window to play.", type: ToastType.error)
             return;
         }
         if(isFullScreen) {
@@ -273,6 +273,7 @@ extension PlayerView {
                 if(self.timerDraggingView.isHidden) {
                     self.videoSlider.value = Float(self.currentTime);
                 }
+
                 let timer = formatTime(seconds: self.currentTime)
                 self.currentTimeLabel.text = timer
                 self.currentTimeLabel.snp.updateConstraints { make in
@@ -280,10 +281,8 @@ extension PlayerView {
                 }
                 if(self.currentTime >= self.duration - 5) {
                     let ind = self.getCurrentPlayIndex()
-                    if ind + 1 < self.setting.playingItems.count {
-                        self.playNextLabel.text = "Going to play next video \(self.setting.playingItems[ind+1].title ?? "")"
-                        self.togglePlayNextLabel(show: true)
-                    }
+                    self.playNextLabel.text = ind + 1 < self.setting.playingItems.count ? "Going to play next video \(self.setting.playingItems[ind+1].title ?? "")" : (self.setting.lastPlayMessage ?? "This is the last video.")
+                    self.togglePlayNextLabel(show: true)
                 } else {
                     self.togglePlayNextLabel(show: false)
                 }
@@ -352,8 +351,12 @@ extension PlayerView {
     }
     
     @objc func playerDidFinishPlaying(sender: Notification) {
-        self.onPlayingEvent(status: PlayingStatus.end)
-        playNext()
+        let playerItem = sender.object as? AVPlayerItem;
+        if(playerItem == self.playerItem){
+            self.onPlayingEvent(status: PlayingStatus.end)
+            playNext()
+        }
+        
     }
     
     @objc func captureChanged() {

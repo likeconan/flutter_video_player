@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
+import 'package:video_player_oneplusdream_example/cache.dart';
 
 import 'first.dart';
 
@@ -55,6 +56,16 @@ class HomeRoute extends StatelessWidget {
               ElevatedButton(
                   onPressed: () async {
                     controller?.togglePause(true);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CacheRoute()),
+                    );
+                    await controller?.togglePause(false);
+                  },
+                  child: const Text("go to cache page")),
+              ElevatedButton(
+                  onPressed: () async {
+                    controller?.togglePause(true);
                     print("pause to navigate into new page");
                     await Navigator.push(
                       context,
@@ -63,18 +74,18 @@ class HomeRoute extends StatelessWidget {
                     print("back and play again");
                     await controller?.togglePause(false);
                   },
-                  child: Text("go to new page")),
+                  child: const Text("go to new page")),
               ElevatedButton(
                   onPressed: () {
                     controller?.toggleFullScreen(
                         ToggleFullScreenParam(isFullScreen: true));
                   },
-                  child: Text("open full screen")),
+                  child: const Text("open full screen")),
               ElevatedButton(
                   onPressed: () {
                     controller?.play(items[1]);
                   },
-                  child: Text("play another item"))
+                  child: const Text("play another item"))
             ],
           ),
         ),
