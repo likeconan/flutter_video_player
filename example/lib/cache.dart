@@ -12,7 +12,7 @@ class CachePage extends StatefulWidget {
 
   class _CachePageState extends State<CachePage> {
 
-    VideoPlayerController? controller;
+    late VideoPlayerController controller;
     //Same demo videos
     String url1 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/2.mp4';
     String url2 = 'https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/3.mp4';
@@ -73,11 +73,11 @@ class CachePage extends StatefulWidget {
                 child: Text("Play video1"),
                 onPressed: () {
                   debugPrint('Playing video 1');
-                  controller!.play( PlayingItem(
+                  controller.play( PlayingItem(
                     id: '1',
                     url: url1,
-                    aspectRatio: 16 / 9,
-                    fitMode: FitMode.contain,
+                    aspectRatio: 9 / 16,
+                    fitMode: FitMode.cover,
                   ));
                 },
               ),
@@ -85,10 +85,10 @@ class CachePage extends StatefulWidget {
                 child: Text("Play video2"),
                 onPressed: () {
                   debugPrint('Playing video 2');
-                  controller!.play( PlayingItem(
+                  controller.play( PlayingItem(
                     id: '2',
                     url: url2,
-                    aspectRatio: 16 / 9,
+                    aspectRatio: 4 / 3,
                     fitMode: FitMode.contain,
                   ));
                 },
@@ -106,7 +106,7 @@ class CachePage extends StatefulWidget {
                   String url3 = '${appStorageDir.path}/3.mp4';
                   bool fileExists = await checkFile(url3);
                   if (fileExists){
-                    controller!.play( PlayingItem(
+                    controller.play( PlayingItem(
                       id: '2',
                       url: url3,
                       aspectRatio: 16 / 9,
@@ -119,21 +119,21 @@ class CachePage extends StatefulWidget {
                 child: Text("Pause video"),
                 onPressed: () {
                   debugPrint('Pausing video');
-                  controller!.togglePause(true);
+                  controller.togglePause(true);
                 },
               ),
               TextButton(
                 child: Text("Precache video"),
                 onPressed: () {
                   debugPrint('Precaching video');
-                  //controller!.preCache(videoSource);
+                  //controller.preCache(videoSource);
                 },
               ),
 
               TextButton(
                 child: Text("Clear cache"),
                 onPressed: () {
-                  //controller?.clearCache();
+                  //controller.clearCache();
                 },
               ),
             ],

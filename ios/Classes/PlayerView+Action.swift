@@ -55,7 +55,7 @@ extension PlayerView {
     }
     
     private func setUpAsset(with url: URL, completion: ((_ asset: AVAsset) -> Void)?) {
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         asset.loadValuesAsynchronously(forKeys: ["playable"]) {
             var error: NSError? = nil
             let status = asset.statusOfValue(forKey: "playable", error: &error)
@@ -72,14 +72,16 @@ extension PlayerView {
                 self.errorMessage.text = "Asset cannot play with unknow reason."
             }
         }
+
+        //        asset.resourceLoader.setDelegate(<#T##delegate: AVAssetResourceLoaderDelegate?##AVAssetResourceLoaderDelegate?#>, queue: <#T##DispatchQueue?#>)
     }
-    
+
     private func setUpPlayerItem(with asset: AVAsset) {
-        
+
         self.playerItem = AVPlayerItem(asset: asset)
         //        self.playerItem?.preferredPeakBitRate = 200000.0
         self.playerItem?.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.status), options: [.old, .new], context: &playerItemContext)
-        
+
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             self.player = AVPlayer(playerItem: self.playerItem!)
@@ -93,13 +95,13 @@ extension PlayerView {
             self.videoSlider.maximumValue = Float(self.duration)
         }
     }
-    
+
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard context == &playerItemContext else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
             return
         }
-        
+        self.activityIndicator.stopAnimating()
         if keyPath == #keyPath(AVPlayerItem.status) {
             let status: AVPlayerItem.Status
             if let statusNumber = change?[.newKey] as? NSNumber {
@@ -110,13 +112,16 @@ extension PlayerView {
             switch status {
             case .readyToPlay:
                 onPlayingEvent(status: PlayingStatus.start);
-                let item = setting.playingItems[getCurrentPlayIndex()];
-                playerLayer.videoGravity = item.fitMode == FitMode.contain ? AVLayerVideoGravity.resizeAspect : AVLayerVideoGravity.resizeAspectFill;
+                playerLayer.videoGravity = currentPlayingItem.fitMode == FitMode.contain ? AVLayerVideoGravity.resizeAspect : AVLayerVideoGravity.resizeAspectFill;
+                setViewAspectRatio()
                 self.onProgress();
-                player?.play();
-                toggleControl();
+                if(setting.autoPlay || autoplayCalled) {
+                    player?.play();
+                    toggleControl();
+                    playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
+                }
+                autoplayCalled = true;
                 errorMessage.isHidden = true;
-                playIcon.setAllStateImage(MediaResource.shared.getImage(name: "pause"))
             case .failed:
                 errorMessage.text = "Player failed to play."
                 errorMessage.isHidden = false
@@ -129,7 +134,7 @@ extension PlayerView {
             }
         }
     }
-    
+
     @objc func playNext() {
         let ind = getCurrentPlayIndex();
         if(ind < setting.playingItems.count - 1) {
@@ -137,12 +142,12 @@ extension PlayerView {
             onPlayingEvent(status: PlayingStatus.start);
         }
     }
-    
+
     func getCurrentPlayIndex()->Int {
         guard let ind = setting.playingItems.firstIndex(where: { $0.id == currentPlayingItem.id }) else {return 0}
         return ind;
     }
-    
+
     @objc func backIconClicked() {
         if(self.isFullScreen) {
             toggleFullscreen(isFullScreen:false);
@@ -150,11 +155,11 @@ extension PlayerView {
             self.delegate?.onBack();
         }
     }
-    
+
     @objc func fullscreenIconClicked() {
         toggleFullscreen(isFullScreen: !self.isFullScreen);
     }
-    
+
     @objc func onVideoSliderValChanged(slider: UISlider, event: UIEvent) {
         if let touchEvent = event.allTouches?.first {
             print(touchEvent.phase.rawValue)
@@ -171,7 +176,7 @@ extension PlayerView {
             }
         }
     }
-    
+
     func seekTo(time:CMTime) {
         guard let p = self.player else {return}
         p.seek(to: time)
@@ -181,7 +186,7 @@ extension PlayerView {
             self.timerDraggingView.isHidden = true
         }
     }
-    
+
     func togglePoster(show:Bool) {
         if(show) {
             self.addSubview(posterImg)
@@ -206,12 +211,25 @@ extension PlayerView {
         } else {
             self.posterImg.removeFromSuperview()
         }
-        
+
     }
     @objc private func handlePosterImageClicked() {
         self.play(with: setting.playingItems[getCurrentPlayIndex()])
     }
-    
+
+    func setViewAspectRatio() {
+        self.snp.remakeConstraints({ make in
+            make.width.equalToSuperview()
+            if(currentPlayingItem.aspectRatio != nil && currentPlayingItem.fitMode == FitMode.cover) {
+                make.height.greaterThanOrEqualTo(self.snp.width).dividedBy(currentPlayingItem.aspectRatio!)
+                make.height.lessThanOrEqualToSuperview()
+            }else {
+                make.height.equalToSuperview()
+            }
+            make.center.equalToSuperview()
+        })
+    }
+
     func toggleFullscreen(isFullScreen:Bool) {
         if(self.isFullScreen == isFullScreen){
             return;
@@ -224,7 +242,7 @@ extension PlayerView {
                 .compactMap({$0 as? UIWindowScene})
                 .first?.windows
                 .filter({$0.isKeyWindow}).first
-            
+
         } else {
             keyWindow = UIApplication.shared.keyWindow
         }
@@ -246,9 +264,7 @@ extension PlayerView {
             DispatchQueue.main.async {
                 self.containerView.addSubview(self)
                 self.backIcon.isHidden = self.setting.hideBackButton;
-                self.snp.makeConstraints({ make in
-                    make.edges.equalTo(self.containerView)
-                })
+                self.setViewAspectRatio()
             }
         }
         playNextIcon.isHidden = !isFullScreen
@@ -265,7 +281,7 @@ extension PlayerView {
         toggleNetwork()
         fullscreenIcon.setAllStateImage(MediaResource.shared.getImage(name: isFullScreen ? "fullscreen_exit":"fullscreen"))
     }
-    
+
     func onProgress() {
         self._playerObserver =  self.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main) { (CMTime) -> Void in
             if self.player!.currentItem?.status == .readyToPlay {
@@ -287,7 +303,7 @@ extension PlayerView {
                     self.togglePlayNextLabel(show: false)
                 }
             }
-            
+
             self.errorMessage.isHidden = true
             let playbackLikelyToKeepUp = self.player?.currentItem?.isPlaybackLikelyToKeepUp
             if playbackLikelyToKeepUp == false{
@@ -297,7 +313,7 @@ extension PlayerView {
             }
         }
     }
-    
+
     func togglePlayNextLabel(show:Bool?) {
         if(show == nil && !self.playNextLabel.isHidden) {
             self.playNextLabel.snp.remakeConstraints { make in
@@ -309,27 +325,27 @@ extension PlayerView {
             self.playNextLabel.isHidden = !s
         }
     }
-    
-    
+
+
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController,
                                     restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         // Restore the user interface.
         print("pip completed")
         completionHandler(true)
     }
-    
+
     func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         // Hide the playback controls.
         // Show the placeholder artwork.
         print("start pip")
     }
-    
+
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         // Hide the placeholder artwork.
         // Show the playback controls.
         print("stop pip")
     }
-    
+
     @objc func pipIconClicked() {
         if self.pipController.isPictureInPictureActive {
             self.pipController.stopPictureInPicture()
@@ -337,11 +353,11 @@ extension PlayerView {
             self.pipController.startPictureInPicture()
         }
     }
-    
+
     @objc func rateIconClicked() {
         self.rateSelectionView.isHidden = !self.rateSelectionView.isHidden
     }
-    
+
     func onRateChanged(rate:Float) {
         self.player?.rate = rate
         self.delegate?.onRateChange(rate: rate)
@@ -349,16 +365,16 @@ extension PlayerView {
         self.rateIcon.setTitle("x \(rate)", for: .normal)
         self.rateIcon.titleLabel?.font = UIFont.systemFont(ofSize: 12)
     }
-    
+
     @objc func playerDidFinishPlaying(sender: Notification) {
         let playerItem = sender.object as? AVPlayerItem;
         if(playerItem == self.playerItem){
             self.onPlayingEvent(status: PlayingStatus.end)
             playNext()
         }
-        
+
     }
-    
+
     @objc func captureChanged() {
         self.screenCaptureView.isHidden = !UIScreen.main.isCaptured
         if(UIScreen.main.isCaptured) {
@@ -369,4 +385,3 @@ extension PlayerView {
         }
     }
 }
-

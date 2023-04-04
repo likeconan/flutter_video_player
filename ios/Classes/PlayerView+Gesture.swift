@@ -78,10 +78,9 @@ extension PlayerView {
     }
     
     func onPlayingEvent(status:PlayingStatus) {
-        let item = setting.playingItems[getCurrentPlayIndex()];
-        self.delegate?.onPlaying(event: PlayingEvent(item:item,status: status,currentPosition: self.currentTime));
+        self.delegate?.onPlaying(event: PlayingEvent(item:currentPlayingItem,status: status,currentPosition: self.currentTime));
     }
-    
+
     @objc func sliderTapped(gestureRecognizer: UILongPressGestureRecognizer) {
         let width = videoSlider.frame.size.width;
         let tapPoint = gestureRecognizer.location(in: videoSlider)
@@ -94,7 +93,7 @@ extension PlayerView {
         seekTo(time:selectedTime)
         toggleControl()
     }
-    
+
     @objc func toggleControl() {
         if(setting.hideControls) {
             return;
@@ -114,7 +113,7 @@ extension PlayerView {
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: self.hideControlWork!)
     }
-    
+
     @objc func speedUp(gestureRecognizer: UILongPressGestureRecognizer) {
         if(UIGestureRecognizer.State.began == gestureRecognizer.state) {
             self.player?.rate = 3;
@@ -122,7 +121,7 @@ extension PlayerView {
             self.player?.rate = 1;
         }
     }
-    
+
     @objc func panedView(_ sender:UIPanGestureRecognizer){
         let distanceKey:CGFloat = 10;
         if (sender.state == UIGestureRecognizer.State.began) {
@@ -132,7 +131,7 @@ extension PlayerView {
             let stopLocation = sender.location(in: self)
             let dx = stopLocation.x - self.startLocation.x;
             let dy = stopLocation.y - self.startLocation.y;
-            
+
             if(gestureSwipeEvent == GestureEvent.none) {
                 if(abs(dx) < distanceKey && abs(dy) > distanceKey) {
                     let isLeft = self.startLocation.x <= (sender.view?.frame.width ?? 0) / 2;
@@ -145,7 +144,7 @@ extension PlayerView {
             }
         }
     }
-    
+
     func handleSwipeEvent(type:GestureEvent, val:CGFloat, isEnded: Bool) {
         NSLog("Gesture: \( type.description()), Change Value: %f", val)
         if(type == GestureEvent.volume) {
@@ -169,7 +168,7 @@ extension PlayerView {
             gestureSwipeEvent = GestureEvent.none
         }
     }
-    
+
     func toggleTimeLabel() {
         self.timeLabel.isHidden = !self.isFullScreen
         if(self.isFullScreen) {
@@ -179,7 +178,7 @@ extension PlayerView {
             self.timeLabel.text = "\(dateFormatter.string(from: currentDateTime))"
         }
     }
-    
+
     func toggleNetwork() {
         self.networkView.isHidden = !self.isFullScreen
         let monitor = NWPathMonitor()
@@ -193,13 +192,13 @@ extension PlayerView {
                     }
                 }
             } else if path.status == .unsatisfied {
-                
+
             }
             monitor.cancel()
         }
         let queue = DispatchQueue.global(qos: .background)
         monitor.start(queue: queue)
-        
+
     }
 }
 
@@ -207,18 +206,17 @@ extension MPVolumeView {
     static func setVolume(_ volume: CGFloat) {
         let volumeView = MPVolumeView()
         let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
-        
+
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.01) {
             NSLog("Changed volume %f", volume)
             slider?.value = Float(volume)
         }
     }
-    
+
     static func getVolume()->Float {
         let volumeView = MPVolumeView()
         let slider = volumeView.subviews.first(where: { $0 is UISlider }) as? UISlider
         return slider?.value ?? 0;
     }
 }
-
 

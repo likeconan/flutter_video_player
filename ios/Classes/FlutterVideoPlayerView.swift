@@ -148,11 +148,12 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         playerView = PlayerView(containerView: _view,setting: param)
         _view.addSubview(playerView!)
         playerView?.snp.makeConstraints { (make) -> Void in
-            make.edges.equalTo(_view)
+            make.width.equalTo(_view)
+            make.height.equalTo(_view)
         }
         playerView?.delegate = self;
     }
-    
+
     @objc func rotated(sender:Notification) {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, windowScene.activationState == .foregroundActive, let _ = windowScene.windows.first else { return }
         if windowScene.interfaceOrientation.isLandscape {
@@ -161,7 +162,7 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             self.playerView?.toggleFullscreen(isFullScreen:false)
         }
     }
-    
+
     @objc func appWillEnterForegroundNotification() {
         self.playerView?.activityIndicator.startAnimating()
         if(self.playerView?.player?.timeControlStatus == .waitingToPlayAtSpecifiedRate){
@@ -171,15 +172,15 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             self.playerView?.togglePause(isPause: false)
         }
     }
-    
+
     @objc func appDidEnterBackgroundNotification() {
         self.playerView?.togglePause(isPause: true)
     }
-    
+
     func onBack() {
         self._channel.invokeMethod("onBack", arguments: nil)
     }
-    
+
     func onPlaying(event:PlayingEvent) {
         do {
             let jsonData = try event.jsonData()
@@ -192,22 +193,21 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             print(error)
         }
     }
-    
+
     func onRateChange(rate: Float) {
         self._channel.invokeMethod("onRateChange", arguments: rate)
     }
-    
+
     func showToast(message:String, type:ToastType = ToastType.warning) {
         let appleToastView = AppleToastView(child: CustomTextToastView(message),minHeight: 32, darkBackgroundColor: type.toColor(), lightBackgroundColor:type.toColor())
         let toast = Toast.custom(view: appleToastView)
         toast.show()
     }
-    
+
     deinit {
         print("deinit in flutter video player")
         NotificationCenter.default.removeObserver(self)
         self.playerView?.release()
     }
 }
-
 

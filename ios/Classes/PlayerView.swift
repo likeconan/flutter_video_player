@@ -42,17 +42,16 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         if(setting.enablePreventScreenCapture) {
             NotificationCenter.default.addObserver(self, selector: #selector(self.captureChanged), name: UIScreen.capturedDidChangeNotification, object: nil)
         }
-        if(setting.autoPlay) {
-            self.play(with: currentPlayingItem )
-        } else {
+        self.play(with: currentPlayingItem )
+        if(!setting.autoPlay && setting.posterImage != nil) {
             togglePoster(show: true)
         }
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     var playerItemContext = 0
     var isFullScreen = false
     var playerItem: AVPlayerItem?
@@ -68,36 +67,36 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     var currentSliderTime = CGFloat(0)
     var gestureSwipeEvent = GestureEvent.none
     var baseOffset = CGFloat(12)
-    
+
     var marqueeStarted:Bool = false;
-    
+
     var hideControlWork:DispatchWorkItem?
     var currentPlayingItem: PlayingItem
     var currentTime = Double(0.0)
-    
     var _playerObserver:Any?
-    
-    
+    var autoplayCalled = false;
+
+
     lazy var viewController:LandscapeViewController = {
         let _viewController = LandscapeViewController();
         _viewController.modalPresentationStyle = .fullScreen
         return _viewController;
     }()
-    
+
     lazy var backIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "arrow_back"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var posterBackIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "arrow_back"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var posterImg: UIImageView = {
         let v = UIImageView()
         v.contentMode = .scaleAspectFill
@@ -107,7 +106,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         v.backgroundColor = .black;
         return v;
     }()
-    
+
     lazy var screenCaptureView:UIView = {
         let v = UIView()
         let l = UILabel()
@@ -125,7 +124,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         v.isHidden = true
         return v
     }()
-    
+
     lazy var errorMessage:UILabel = {
         let label = UILabel();
         label.textColor = .white
@@ -138,7 +137,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         label.textAlignment = .center
         return label
     }()
-    
+
     lazy var title:UILabel = {
         let label = UILabel();
         label.textColor = .white
@@ -150,7 +149,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         label.numberOfLines = 2
         return label
     }()
-    
+
     lazy var timeLabel:UILabel = {
         let l = UILabel()
         l.font = UIFont.systemFont(ofSize: 10)
@@ -162,49 +161,49 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         l.isHidden = true
         return l;
     }()
-    
+
     lazy var networkView:UIImageView = {
         let i = UIImageView()
         i.image = MediaResource.shared.getImage(name: "cellular")
         i.isHidden = true
         return i
     }()
-    
+
     lazy var rateIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "play_speed"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var rateSelectionView:PlayRateSelectionView = {
         let v = PlayRateSelectionView()
         v.isHidden = true
         v.onRateChanged = self.onRateChanged
         return v
     }()
-    
+
     lazy var fullscreenIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "fullscreen"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var pipIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "picture_in_picture"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var playIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "play"))
         button.sizeToFit()
         return button
     }()
-    
+
     lazy var playNextIcon:UIButton = {
         let button = UIButton(type: .custom)
         button.setAllStateImage(MediaResource.shared.getImage(name: "skip_next"))
@@ -212,7 +211,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         button.isHidden = true
         return button
     }()
-    
+
     lazy var playNextLabel: PaddingLabel = {
         let l = PaddingLabel()
         l.textColor = .white
@@ -227,7 +226,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         l.font = UIFont.systemFont(ofSize: 10)
         return l
     }()
-    
+
     lazy var videoSlider: VideoSlider = {
         let slider = VideoSlider()
         slider.maximumTrackTintColor = .lightGray
@@ -240,7 +239,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         slider.setThumbImage(MediaResource.shared.getImage(name: "slider_thumb"), for: .highlighted)
         return slider
     }()
-    
+
     lazy var currentTimeLabel: UILabel = {
         let l = UILabel();
         l.text = "00:00";
@@ -249,7 +248,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         l.textAlignment = NSTextAlignment.left
         return l;
     }()
-    
+
     lazy var durationTimeLabel: UILabel = {
         let l = UILabel();
         l.text = "00:00";
@@ -258,7 +257,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         l.textAlignment = NSTextAlignment.left
         return l;
     }()
-    
+
     lazy var timerDraggingView: UIView = {
         let v = UIView()
         v.isHidden = true
@@ -266,7 +265,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         v.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         return v
     }()
-    
+
     lazy var timerDraggingLabel: UILabel = {
         let l = UILabel();
         l.text = "00:00 / 00:00";
@@ -275,35 +274,35 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         l.textAlignment = NSTextAlignment.left
         return l;
     }()
-    
+
     lazy var videoControllContainer:UIView = {
         let view = UIView()
         return view
     }()
-    
+
     lazy var gradientBottomView:UIView = {
         let view = UIView()
         view.backgroundColor = .black.withAlphaComponent(0.2)
         return view
     }()
-    
+
     lazy var activityIndicator: UIActivityIndicatorView = {
         let activityIndicator = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.large)
         activityIndicator.color = .white
         activityIndicator.hidesWhenStopped = true
         return activityIndicator
     }()
-    
+
     lazy var marqueeLabel:UILabel = {
         let l = UILabel()
         l.sizeToFit()
         return l
     }()
-    
+
     var playerLayer: AVPlayerLayer {
         return layer as! AVPlayerLayer
     }
-    
+
     var player: AVPlayer? {
         get {
             return playerLayer.player
@@ -312,7 +311,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             playerLayer.player = newValue
         }
     }
-    
+
     func setupUI() {
         self.addSubview(timerDraggingView)
         self.addSubview(errorMessage)
@@ -337,122 +336,122 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         videoControllContainer.addSubview(durationTimeLabel)
         videoControllContainer.addSubview(rateSelectionView)
         timerDraggingView.addSubview(timerDraggingLabel)
-        
+
         activityIndicator.snp.makeConstraints { make in
             make.center.equalToSuperview()
         }
-        
+
         screenCaptureView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
+
         errorMessage.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.left.equalToSuperview().offset(20)
             make.width.lessThanOrEqualToSuperview().offset(-20)
             make.right.equalToSuperview().offset(-20)
         }
-        
+
         playNextLabel.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(baseOffset)
             make.bottom.equalToSuperview().offset(-12)
         }
-        
+
         videoControllContainer.snp.makeConstraints { make in
             make.edges.equalTo(self)
         }
-        
+
         gradientBottomView.snp.makeConstraints { make in
             make.bottom.equalTo(videoControllContainer)
             make.height.equalTo(36)
             make.width.equalToSuperview()
         }
-        
+
         backIcon.snp.makeConstraints { make in
             make.top.equalTo(self).offset(baseOffset)
             make.left.equalTo(self).offset(baseOffset)
         }
-        
+
         backIcon.isHidden = setting.hideBackButton
-        
+
         title.snp.makeConstraints { make in
             make.centerY.equalTo(backIcon)
             make.left.equalTo(backIcon).offset(backIcon.frame.width + baseOffset)
             make.width.equalTo(250)
         }
-        
+
         timeLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(2)
             make.centerX.equalToSuperview()
         }
-        
+
         networkView.snp.makeConstraints { make in
             make.centerY.equalTo(backIcon)
             make.right.equalToSuperview().offset(baseOffset * -1)
         }
-        
+
         playIcon.snp.makeConstraints { make in
             make.bottom.equalTo(videoControllContainer).offset(baseOffset * -0.5)
             make.left.equalTo(videoControllContainer).offset(baseOffset)
         }
-        
+
         playNextIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.left.equalTo(playIcon.snp.right).offset(baseOffset)
         }
-        
+
         fullscreenIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo(videoControllContainer).offset(baseOffset * -1)
         }
-        
+
         rateIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo((pipIcon.isHidden ? fullscreenIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
         }
-        
+
         rateSelectionView.snp.makeConstraints { make in
             make.width.equalTo(rateIcon.snp.width).offset(12)
             make.height.equalTo(80)
             make.bottom.equalTo(rateIcon.snp.top)
             make.left.equalTo(rateIcon.snp.left).offset(-6)
         }
-        
+
         pipIcon.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo(rateIcon.snp.left).offset(baseOffset * -1)
         }
-        
-        
+
+
         currentTimeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.width.equalTo(36)
             make.left.equalTo(playIcon.snp.right).offset(baseOffset)
         }
-        
+
         videoSlider.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.height.equalTo(baseOffset)
             make.left.equalTo(currentTimeLabel.snp.right).offset(baseOffset/2)
             make.right.equalTo(durationTimeLabel.snp.left).offset(baseOffset / -2)
         }
-        
+
         durationTimeLabel.snp.makeConstraints { make in
             make.centerY.equalTo(playIcon)
             make.right.equalTo((pipIcon.isHidden ? rateIcon.snp.left : pipIcon.snp.left)).offset(baseOffset * -1)
         }
-        
+
         timerDraggingView.snp.makeConstraints { make in
             make.center.equalTo(self).offset(-16)
             make.height.equalTo(48)
             make.width.equalTo(120)
         }
-        
+
         timerDraggingLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
         }
     }
-    
+
     func bindActions() {
         backIcon.addTarget(self, action: #selector(backIconClicked), for: .touchDown)
         playIcon.addTarget(self, action: #selector(togglePlay), for: .touchDown)
@@ -462,7 +461,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         rateIcon.addTarget(self, action: #selector(rateIconClicked), for: .touchDown)
         fullscreenIcon.addTarget(self, action: #selector(fullscreenIconClicked), for: .touchDown)
     }
-    
+
     func setupPictureInPicture() {
         if AVPictureInPictureController.isPictureInPictureSupported() {
             pipController = AVPictureInPictureController(playerLayer: playerLayer)
@@ -476,7 +475,7 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             self.pipIcon.isHidden = true
         }
     }
-    
+
     deinit {
         playerItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
         NotificationCenter.default.removeObserver(self)
