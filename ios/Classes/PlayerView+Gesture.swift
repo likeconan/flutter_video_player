@@ -78,8 +78,7 @@ extension PlayerView {
     }
     
     func onPlayingEvent(status:PlayingStatus) {
-        let item = setting.playingItems[getCurrentPlayIndex()];
-        self.delegate?.onPlaying(event: PlayingEvent(item:item,status: status,currentPosition: self.currentTime));
+        self.delegate?.onPlaying(event: PlayingEvent(item:currentPlayingItem,status: status,currentPosition: self.currentTime));
     }
     
     @objc func sliderTapped(gestureRecognizer: UILongPressGestureRecognizer) {
@@ -96,6 +95,9 @@ extension PlayerView {
     }
     
     @objc func toggleControl() {
+        if(setting.hideControls) {
+            return;
+        }
         self.videoControllContainer.isHidden = false
         toggleTimeLabel()
         toggleNetwork()

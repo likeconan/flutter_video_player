@@ -34,6 +34,8 @@ struct PlayerSetting {
     let posterImage: String?
     let hideBackButton: Bool
     let initialPlayIndex: Int
+    let hideControls: Bool
+    let bufferDuration: Double?
 }
 
 struct PlayingItem: Encodable {
@@ -42,7 +44,8 @@ struct PlayingItem: Encodable {
     let title: String?
     let position: Double?
     let extra: String?
-    
+    let aspectRatio: Double?
+    let fitMode: FitMode
 }
 
 struct PlayingEvent: Encodable {
@@ -58,6 +61,11 @@ enum PlayingStatus: Int, Encodable {
     case end = 3
     case error = 4
     case release = 5
+}
+
+enum FitMode: Int, Encodable {
+    case contain = 0
+    case cover = 1
 }
 
 enum ToastType {
@@ -100,6 +108,99 @@ enum GestureEvent {
     }
 }
 
+func getMediaDataFromLocalFile(url: URL) -> Data? {
+    guard let fileURL = getCachedURL(url: url) else {
+        return nil
+    }
+    
+    if FileManager.default.fileExists(atPath: fileURL.path) {
+        do {
+            return try Data(contentsOf: fileURL )
+        } catch let error {
+            print("Failed to delete file with error: \(error)")
+        }
+    }
+    return nil;
+}
+
+func getCachedURL(url:URL) -> URL? {
+    guard let docFolderURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        return nil
+    }
+    let fileName = "oneplusdream_video_\(url.lastPathComponent)"
+    let fileURL = docFolderURL.appendingPathComponent(fileName)
+    return fileURL
+}
+
+func saveMediaDataToLocalFile(data:Data, url: URL) -> URL? {
+    guard let fileURL = getCachedURL(url: url) else {
+        return nil
+    }
+    
+    if FileManager.default.fileExists(atPath: fileURL.path) {
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+        } catch let error {
+            print("Failed to delete file with error: \(error)")
+        }
+    }
+    
+    do {
+        try data.write(to: fileURL)
+    } catch let error {
+        print("Failed to save data with error: \(error)")
+        return nil
+    }
+    
+    return fileURL
+}
+
+func downloadCache(url:URL) {
+    print("start cache url \(url.absoluteString)")
+    let sessionConfig = URLSessionConfiguration.default
+    let session = URLSession(configuration: sessionConfig)
+    let request = URLRequest(url:url)
+    guard let to = getCachedURL(url: url ), !FileManager.default.fileExists(atPath: to.path) else { return }
+    let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
+        if let tempLocalUrl = tempLocalUrl, error == nil  {
+            do {
+                try FileManager.default.copyItem(at: tempLocalUrl, to: to)
+            } catch (let writeError) {
+                print("Error creating a file \(writeError)")
+            }
+        } else {
+            print("Error took place while downloading a file. Error description: %@", error?.localizedDescription);
+        }
+    }
+    task.resume()
+}
+
+func removeAllCache() {
+    guard let docFolderURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        print("cannot access doc folder")
+        return
+    }
+    do {
+        // Get the directory contents urls (including subfolders urls)
+        let directoryContents = try FileManager.default.contentsOfDirectory(
+            at: docFolderURL,
+            includingPropertiesForKeys: nil
+        )
+        
+        for url in directoryContents {
+            if(url.lastPathComponent.contains("oneplusdream_video_")) {
+                do {
+                    try FileManager.default.removeItem(at: url)
+                } catch let error {
+                    print("Failed to delete file with error: \(error)")
+                }
+            }
+        }
+    } catch {
+        print("error in remove all \(error)")
+    }
+}
+
 func formatTime(seconds: Double) -> String {
     let result = timeDivider(seconds: seconds)
     let hoursString = "\(result.hours)"
@@ -122,6 +223,8 @@ func formatTime(seconds: Double) -> String {
     }
     return time
 }
+
+
 
 func timeDivider(seconds: Double) -> (hours: Int, minutes: Int, seconds: Int) {
     guard !(seconds.isNaN || seconds.isInfinite) else {
@@ -224,7 +327,7 @@ extension UIButton {
 }
 
 extension Encodable {
-
+    
     /// Encode into JSON and return `Data`
     func jsonData() throws -> Data {
         let encoder = JSONEncoder()

@@ -42,9 +42,8 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         if(setting.enablePreventScreenCapture) {
             NotificationCenter.default.addObserver(self, selector: #selector(self.captureChanged), name: UIScreen.capturedDidChangeNotification, object: nil)
         }
-        if(setting.autoPlay) {
-            self.play(with: currentPlayingItem )
-        } else {
+        self.play(with: currentPlayingItem )
+        if(!setting.autoPlay && setting.posterImage != nil) {
             togglePoster(show: true)
         }
     }
@@ -74,8 +73,9 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
     var hideControlWork:DispatchWorkItem?
     var currentPlayingItem: PlayingItem
     var currentTime = Double(0.0)
-    
     var _playerObserver:Any?
+    var autoplayCalled = false;
+    var loaderDelegate:CacheResourceLoaderDelegate?;
     
     
     lazy var viewController:LandscapeViewController = {
@@ -300,10 +300,6 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
         return l
     }()
     
-    var playerLayer: AVPlayerLayer {
-        return layer as! AVPlayerLayer
-    }
-    
     var player: AVPlayer? {
         get {
             return playerLayer.player
@@ -312,6 +308,12 @@ class PlayerView: UIView, AVPictureInPictureControllerDelegate {
             playerLayer.player = newValue
         }
     }
+    
+    var playerLayer: AVPlayerLayer {
+        return layer as! AVPlayerLayer
+    }
+    
+   
     
     func setupUI() {
         self.addSubview(timerDraggingView)

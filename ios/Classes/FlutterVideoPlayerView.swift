@@ -75,7 +75,7 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
             } else if (call.method == "play") {
                 if let args = call.arguments as? Dictionary<String, Any>,
                    let url = args["url"] as? String{
-                    let item = PlayingItem(url:url, id: args["id"] as! String, title: args["title"] as? String, position: args["position"] as? Double, extra: args["extra"] as? String)
+                    let item = PlayingItem(url:url, id: args["id"] as! String, title: args["title"] as? String, position: args["position"] as? Double, extra: args["extra"] as? String, aspectRatio: args["aspectRatio"] as? Double, fitMode: FitMode(rawValue: args["fitMode"] as! Int) ?? FitMode.contain)
                     self.playerView?.togglePause(isPause: true)
                     self.playerView?.play(with: item)
                     result(nil)
@@ -84,9 +84,12 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
                 }
             } else if (call.method == "togglePause") {
                 let args = call.arguments as? Bool
-                self.playerView?.togglePause(isPause: args ?? false);
+                let isPause = args ?? false;
+                self.toggleListener(isEnable: !isPause)
+                self.playerView?.togglePause(isPause: isPause);
                 result(nil)
             } else if (call.method == "release") {
+                self.toggleListener(isEnable: false)
                 self.playerView?.release()
                 result(nil)
             } else if(call.method == "ready") {
@@ -95,18 +98,26 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
                 result(FlutterError.init(code: "noMethodFound", message: "no related method found" + call.method, details: nil))
             }
         }
-        NotificationCenter.default.addObserver(self, selector: #selector(
-            rotated), name: UIDevice.orientationDidChangeNotification, object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(appWillEnterForegroundNotification),
-                                               name: UIApplication.willEnterForegroundNotification, object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(appDidEnterBackgroundNotification),
-                                               name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
     
     func view() -> UIView {
         return _view
+    }
+    
+    func toggleListener(isEnable:Bool) {
+        if(isEnable) {
+            NotificationCenter.default.addObserver(self, selector: #selector(
+                rotated(sender:)), name: UIDevice.orientationDidChangeNotification, object: nil)
+            NotificationCenter.default.addObserver(self,
+                                                   selector: #selector(appWillEnterForegroundNotification),
+                                                   name: UIApplication.willEnterForegroundNotification, object: nil)
+            NotificationCenter.default.addObserver(self,
+                                                   selector: #selector(appDidEnterBackgroundNotification),
+                                                   name: UIApplication.didEnterBackgroundNotification, object: nil)
+        }else {
+            NotificationCenter.default.removeObserver(self)
+        }
+       
     }
     
     func createNativeView(view _view: UIView, arguments args: Any?){
@@ -127,21 +138,24 @@ class VideoPlayerView: NSObject, FlutterPlatformView, PlayerViewDelegate {
         let lastPlayMessage = args["lastPlayMessage"] as? String
         let posterImage = args["posterImg"] as? String
         let hideBackButton = args["hideBackButton"] as? Bool
+        let hideControls = args["hideControls"] as? Bool
         let initialPlayIndex = args["initialPlayIndex"] as? Int
+        let bufferDuration = args["bufferDuration"] as? Double
         var playingItems = [PlayingItem]()
         for item in items {
-            playingItems.append(PlayingItem(url: item["url"] as! String,id: item["id"] as! String, title: item["title"] as? String, position: item["position"] as? Double, extra: item["extra"] as? String))
+            playingItems.append(PlayingItem(url: item["url"] as! String,id: item["id"] as! String, title: item["title"] as? String, position: item["position"] as? Double, extra: item["extra"] as? String,aspectRatio: item["aspectRatio"] as? Double, fitMode: FitMode(rawValue: item["fitMode"] as! Int) ?? FitMode.contain))
         }
-        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, playingItems: playingItems, lastPlayMessage: lastPlayMessage, posterImage: posterImage, hideBackButton: hideBackButton ?? false, initialPlayIndex: initialPlayIndex ?? 0)
+        let param = PlayerSetting(autoPlay: autoPlay, protectionText: protectionText, enablePreventScreenCapture: enablePreventScreenCapture, marqueeText: marqueeText, enableMarquee: enableMarquee, playingItems: playingItems, lastPlayMessage: lastPlayMessage, posterImage: posterImage, hideBackButton: hideBackButton ?? false, initialPlayIndex: initialPlayIndex ?? 0, hideControls: hideControls ?? false, bufferDuration: bufferDuration)
         playerView = PlayerView(containerView: _view,setting: param)
         _view.addSubview(playerView!)
         playerView?.snp.makeConstraints { (make) -> Void in
-            make.edges.equalTo(_view)
+            make.width.equalTo(_view)
+            make.height.equalTo(_view)
         }
         playerView?.delegate = self;
     }
     
-    @objc func rotated() {
+    @objc func rotated(sender:Notification) {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene, windowScene.activationState == .foregroundActive, let _ = windowScene.windows.first else { return }
         if windowScene.interfaceOrientation.isLandscape {
             self.playerView?.toggleFullscreen(isFullScreen:true)

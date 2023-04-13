@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
+import 'package:video_player_oneplusdream_example/cache.dart';
 
 import 'first.dart';
 
@@ -14,14 +15,9 @@ class HomeRoute extends StatelessWidget {
       position: 20.0,
     ),
     PlayingItem(
-      id: '2',
-      url: "http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8",
-      title: "BigBop",
-      position: 54.0,
-    ),
-    PlayingItem(
       id: '3',
-      url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      url:
+          "https://d305e11xqcgjdr.cloudfront.net/stories/ee09c3b8-5b0c-4aff-b1fe-58f175328850/2.mp4",
       title: "Rabbit 3",
     ),
   ];
@@ -55,6 +51,16 @@ class HomeRoute extends StatelessWidget {
               ElevatedButton(
                   onPressed: () async {
                     controller?.togglePause(true);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CacheRoute()),
+                    );
+                    await controller?.togglePause(false);
+                  },
+                  child: const Text("go to cache page")),
+              ElevatedButton(
+                  onPressed: () async {
+                    controller?.togglePause(true);
                     print("pause to navigate into new page");
                     await Navigator.push(
                       context,
@@ -63,18 +69,18 @@ class HomeRoute extends StatelessWidget {
                     print("back and play again");
                     await controller?.togglePause(false);
                   },
-                  child: Text("go to new page")),
+                  child: const Text("go to new page")),
               ElevatedButton(
                   onPressed: () {
                     controller?.toggleFullScreen(
                         ToggleFullScreenParam(isFullScreen: true));
                   },
-                  child: Text("open full screen")),
+                  child: const Text("open full screen")),
               ElevatedButton(
                   onPressed: () {
-                    controller?.play(items[1]);
+                    VideoPlayerGlobal().clearAllCache();
                   },
-                  child: Text("play another item"))
+                  child: const Text("clear All Cache"))
             ],
           ),
         ),

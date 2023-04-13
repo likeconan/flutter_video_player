@@ -65,5 +65,4 @@ abstract class VideoPlayerOneplusdreamPlatform extends PlatformInterface {
   }
 
   /// Dispose of whatever resources the `videoId` is holding on to.
-
 }
