@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:video_player_oneplusdream/video_player_oneplusdream.dart';
 
+import 'video.controller.dart';
+
 class CacheRoute extends StatelessWidget {
-  late VideoPlayerController controller;
   CacheRoute({super.key});
 
   //Same demo videos
@@ -61,14 +62,14 @@ class CacheRoute extends StatelessWidget {
                 print(
                     "onPlaying event happened $event, ${event.status}, po ${event.currentPosition}");
               },
-              onVideoCreated: ((c) => controller = c),
+              onVideoCreated: ((c) => cacheController = c),
             ),
           ),
           TextButton(
             child: Text("Play video1"),
             onPressed: () {
               debugPrint('Playing video 1');
-              controller.play(PlayingItem(
+              cacheController?.play(PlayingItem(
                 id: '1',
                 url: url1,
                 aspectRatio: 16 / 9,
@@ -80,7 +81,7 @@ class CacheRoute extends StatelessWidget {
             child: Text("Play video2"),
             onPressed: () {
               debugPrint('Playing video 2');
-              controller.play(PlayingItem(
+              cacheController?.play(PlayingItem(
                 id: '2',
                 url: url2,
                 aspectRatio: 16 / 9,
@@ -89,22 +90,15 @@ class CacheRoute extends StatelessWidget {
             },
           ),
           TextButton(
+            child: Text("Play video"),
             onPressed: () {
-              // TODO
-            },
-            child: Text("Download video3 from Web"),
-          ),
-          TextButton(
-            child: Text("Play video3"),
-            onPressed: () async {
-              // TODO
+              cacheController?.togglePause(false);
             },
           ),
           TextButton(
             child: Text("Pause video"),
             onPressed: () {
-              debugPrint('Pausing video');
-              controller.togglePause(true);
+              cacheController?.togglePause(true);
             },
           ),
           TextButton(

@@ -20,8 +20,14 @@ class VideoPlayerGlobal {
 
   final _methodChannel = const MethodChannel('oneplusdream/global_channel');
 
-  Future<void> cachePlayingItems(List<String> urls) async {
-    await _methodChannel.invokeMethod("cache", urls);
+  Future<void> cachePlayingItems(List<String> urls,
+      {bool concurrent = true}) async {
+    await _methodChannel
+        .invokeMethod("cache", {"urls": urls, "concurrent": concurrent});
+  }
+
+  Future<void> cancelCache(List<String> urls) async {
+    await _methodChannel.invokeMethod("cancelCache", urls);
   }
 
   Future<void> clearAllCache() async {

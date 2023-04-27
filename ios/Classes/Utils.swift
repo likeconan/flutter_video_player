@@ -155,21 +155,29 @@ func saveMediaDataToLocalFile(data:Data, url: URL) -> URL? {
     return fileURL
 }
 
-func downloadCache(url:URL) {
+func downloadCache(url:URL, complete:((_ result:Bool)->Void)? = nil) {
     print("start cache url \(url.absoluteString)")
+    
     let sessionConfig = URLSessionConfiguration.default
     let session = URLSession(configuration: sessionConfig)
     let request = URLRequest(url:url)
-    guard let to = getCachedURL(url: url ), !FileManager.default.fileExists(atPath: to.path) else { return }
+    guard let to = getCachedURL(url: url ), !FileManager.default.fileExists(atPath: to.path) else {
+        complete?(true)
+        return
+    }
     let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
-        if let tempLocalUrl = tempLocalUrl, error == nil  {
+        if let localURL = tempLocalUrl, error == nil  {
             do {
-                try FileManager.default.copyItem(at: tempLocalUrl, to: to)
+                try FileManager.default.copyItem(at: localURL, to: to)
+                complete?(true)
+                print("done in download \(url.absoluteString)")
             } catch (let writeError) {
-                print("Error creating a file \(writeError)")
+                complete?(false)
+                print("Error creating a file \(writeError) with \(url.absoluteString)")
             }
         } else {
-            print("Error took place while downloading a file. Error description: %@", error?.localizedDescription);
+            complete?(false)
+            print("Error took place while downloading a file with \(url.absoluteString). Error description: %@", error?.localizedDescription);
         }
     }
     task.resume()

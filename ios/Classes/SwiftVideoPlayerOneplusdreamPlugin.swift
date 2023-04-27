@@ -14,14 +14,32 @@ public class SwiftVideoPlayerOneplusdreamPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch (call.method) {
         case "cache":
-            if let urls = call.arguments as? [String] {
+            if let args = call.arguments as? Dictionary<String, Any>,
+               let urlStrs = args["urls"] as? [String],
+               let concurrent = args["concurrent"] as? Bool {
                 DispatchQueue.global().async {
-                    for url in urls {
+                    var urls:[URL] = []
+                    for url in urlStrs {
                         guard let url = URL(string:url) else {return}
-                        downloadCache(url: url)
+                        urls.append(url)
                     }
+                    result(nil)
+                    PreCacheHandler.shared.cache(urls: urls, concurrent: concurrent)
                 }
-                result(nil)
+            }else {
+                result(FlutterError.init(code: "errorSetParameter", message: "should be array of string", details: nil))
+            }
+        case "cancelCache":
+            if let urlStrs = call.arguments as? [String] {
+                DispatchQueue.global().async {
+                    var urls:[URL] = []
+                    for url in urlStrs {
+                        guard let url = URL(string:url) else {return}
+                        urls.append(url)
+                    }
+                    PreCacheHandler.shared.cancelCache(urls: urls)
+                    result(nil)
+                }
             }else {
                 result(FlutterError.init(code: "errorSetParameter", message: "should be array of string", details: nil))
             }
