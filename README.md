@@ -31,6 +31,11 @@ Android Manifest file, located in `<project root>/android/app/src/main/AndroidMa
 
 ### Web
 
+> Add below two links in your index.html
+```
+<link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+<script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+```
 > Please check [video.js](https://videojs.com) documentation for details
 
 

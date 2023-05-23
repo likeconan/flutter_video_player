@@ -20,10 +20,6 @@ import 'dart:js' as js;
 class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
   String elementId = "";
   dynamic player;
-  final List<String> videoScripts = [
-    "https://vjs.zencdn.net/8.0.4/video-js.css",
-    "https://vjs.zencdn.net/8.0.4/video.min.js"
-  ];
   final List<String> scripts = [
     "packages/video_player_oneplusdream/lib/assets/videojs_playlist.min.js",
     "packages/video_player_oneplusdream/lib/assets/controller.js"
@@ -171,10 +167,6 @@ class VideoPlayerOneplusdreamWeb extends VideoPlayerOneplusdreamPlatform {
   }
 
   void initPlayer(int videoId, Map<String, dynamic> params) async {
-    for (var script in videoScripts) {
-      await importJSFile(script);
-    }
-    while (!js.context.hasProperty('videojs')) {}
     for (var script in scripts) {
       await importJSFile(script);
     }
