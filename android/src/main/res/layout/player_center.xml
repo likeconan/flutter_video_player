@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/time_seek_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@drawable/rounded_corner"
+        android:padding="24px"
+        android:textColor="@color/light_font"
+        android:textSize="24sp"
+        android:visibility="invisible"></TextView>
+
+    <LinearLayout
+        android:id="@+id/brightness_con"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="24dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:src="@drawable/brightness"></ImageView>
+
+        <LinearLayout
+            android:layout_width="8dp"
+            android:layout_height="100dp"
+            android:background="@drawable/rounded_corner"
+            android:gravity="bottom">
+
+            <View
+                android:id="@+id/brightness_value"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:background="@drawable/rounded_corner_white">
+
+            </View>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/volume_con"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="24dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:src="@drawable/volume">
+
+        </ImageView>
+
+        <LinearLayout
+            android:layout_width="8dp"
+            android:layout_height="100dp"
+            android:background="@drawable/rounded_corner"
+            android:gravity="bottom">
+
+            <View
+                android:id="@+id/volume_value"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:background="@drawable/rounded_corner_white">
+
+            </View>
+        </LinearLayout>
+    </LinearLayout>
+
+
+</RelativeLayout>
